@@ -277,23 +277,29 @@ fastify.post('/api/items', { schema: itemSchema }, async (request, reply) => {
 
 ## Testing
 
+No test framework is pre-installed. To add testing:
+
 ```bash
-npm install --save-dev vitest @types/node
+npm install --save-dev vitest
 ```
 
+Add to `package.json` scripts: `"test": "vitest run"`
+
+Example test:
 ```typescript
-import { test } from 'vitest'
+// src/index.test.ts
+import { test, expect } from 'vitest'
 import Fastify from 'fastify'
 
 test('GET /health returns 200', async () => {
   const app = Fastify()
   app.get('/health', async () => ({ status: 'ok' }))
-  
+
   const response = await app.inject({
     method: 'GET',
     url: '/health'
   })
-  
+
   expect(response.statusCode).toBe(200)
 })
 ```
