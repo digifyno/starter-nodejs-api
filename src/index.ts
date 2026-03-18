@@ -1,4 +1,6 @@
 import Fastify from 'fastify'
+import helmet from '@fastify/helmet'
+import rateLimit from '@fastify/rate-limit'
 import { readFileSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
@@ -12,6 +14,10 @@ const __dirname = dirname(__filename)
 const fastify = Fastify({
   logger: true
 })
+
+// Security plugins (registered before routes)
+await fastify.register(helmet)
+await fastify.register(rateLimit, { max: 100, timeWindow: '1 minute' })
 
 // Types
 interface HealthResponse {

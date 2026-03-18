@@ -6,6 +6,8 @@
 - **Fastify** - Fast web framework
 - **TypeScript 5.7+** in strict mode
 - **tsx** - Fast TS execution with watch mode
+- **@fastify/helmet** - HTTP security headers (enabled by default)
+- **@fastify/rate-limit** - Request rate limiting (enabled by default)
 
 ## Development Commands
 
@@ -176,6 +178,26 @@ fastify.get('/api/users', async () => {
   return await prisma.user.findMany()
 })
 ```
+
+## Security
+
+`@fastify/helmet` and `@fastify/rate-limit` are pre-installed and registered by default in `src/index.ts`.
+
+```bash
+npm install @fastify/helmet @fastify/rate-limit
+```
+
+```typescript
+import helmet from '@fastify/helmet'
+import rateLimit from '@fastify/rate-limit'
+
+// Register before routes
+await fastify.register(helmet)
+await fastify.register(rateLimit, { max: 100, timeWindow: '1 minute' })
+```
+
+`helmet` sets secure HTTP response headers (CSP, HSTS, X-Frame-Options, etc.).
+`rateLimit` limits each IP to 100 requests per minute by default — adjust `max` and `timeWindow` as needed.
 
 ## CORS
 
