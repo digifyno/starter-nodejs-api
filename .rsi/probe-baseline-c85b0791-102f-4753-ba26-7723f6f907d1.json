@@ -1,0 +1,1 @@
+[{"id":"dist-exists","name":"Build output exists","passed":false},{"id":"tsc-check","name":"TypeScript type check","passed":true}]
