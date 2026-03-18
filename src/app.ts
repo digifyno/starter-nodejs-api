@@ -7,6 +7,7 @@ import swaggerUi from '@fastify/swagger-ui'
 import { readFileSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { config } from './config.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -44,14 +45,14 @@ export async function buildApp(): Promise<FastifyInstance> {
       },
       servers: [
         {
-          url: `http://localhost:${process.env.PORT || '3000'}`,
+          url: `http://localhost:${config.PORT}`,
           description: 'Local development server'
         }
       ]
     }
   })
 
-  if (process.env.NODE_ENV !== 'production') {
+  if (config.NODE_ENV !== 'production') {
     await fastify.register(swaggerUi, {
       routePrefix: '/docs'
     })
@@ -69,7 +70,7 @@ export async function buildApp(): Promise<FastifyInstance> {
 
     return {
       message: 'Fastify Backend',
-      docs: process.env.NODE_ENV !== 'production' ? '/docs' : 'disabled in production',
+      docs: config.NODE_ENV !== 'production' ? '/docs' : 'disabled in production',
       health: '/health'
     }
   })
