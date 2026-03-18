@@ -1,6 +1,8 @@
 import Fastify from 'fastify'
 import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
+import swagger from '@fastify/swagger'
+import swaggerUi from '@fastify/swagger-ui'
 import { readFileSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
@@ -18,6 +20,30 @@ const fastify = Fastify({
 // Security plugins (registered before routes)
 await fastify.register(helmet)
 await fastify.register(rateLimit, { max: 100, timeWindow: '1 minute' })
+
+// API documentation (OpenAPI 3.0) — disabled in production
+await fastify.register(swagger, {
+  openapi: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Fastify API',
+      description: 'Auto-generated API documentation',
+      version: '1.0.0'
+    },
+    servers: [
+      {
+        url: `http://localhost:${process.env.PORT || '3000'}`,
+        description: 'Local development server'
+      }
+    ]
+  }
+})
+
+if (process.env.NODE_ENV !== 'production') {
+  await fastify.register(swaggerUi, {
+    routePrefix: '/docs'
+  })
+}
 
 // Types
 interface HealthResponse {
@@ -44,12 +70,27 @@ fastify.get('/', async (request, reply) => {
   
   return {
     message: 'Fastify Backend',
-    docs: 'No automatic docs (use tools like Postman)',
+    docs: process.env.NODE_ENV !== 'production' ? '/docs' : 'disabled in production',
     health: '/health'
   }
 })
 
-fastify.get<{ Reply: HealthResponse }>('/health', async (request, reply) => {
+fastify.get<{ Reply: HealthResponse }>('/health', {
+  schema: {
+    summary: 'Health check',
+    tags: ['system'],
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          status: { type: 'string' },
+          message: { type: 'string' },
+          timestamp: { type: 'string' }
+        }
+      }
+    }
+  }
+}, async (request, reply) => {
   return {
     status: 'healthy',
     message: 'API is running',
@@ -57,11 +98,30 @@ fastify.get<{ Reply: HealthResponse }>('/health', async (request, reply) => {
   }
 })
 
-fastify.get('/api/hello', async (request, reply) => {
+fastify.get('/api/hello', {
+  schema: {
+    summary: 'Hello endpoint',
+    tags: ['api']
+  }
+}, async (request, reply) => {
   return { message: 'Hello from Fastify!' }
 })
 
-fastify.post<{ Body: Item }>('/api/items', async (request, reply) => {
+fastify.post<{ Body: Item }>('/api/items', {
+  schema: {
+    summary: 'Create an item',
+    tags: ['items'],
+    body: {
+      type: 'object',
+      required: ['name', 'price'],
+      properties: {
+        name: { type: 'string' },
+        description: { type: 'string' },
+        price: { type: 'number' }
+      }
+    }
+  }
+}, async (request, reply) => {
   const item = request.body
   return {
     status: 'created',
@@ -69,7 +129,18 @@ fastify.post<{ Body: Item }>('/api/items', async (request, reply) => {
   }
 })
 
-fastify.get<{ Params: { id: string } }>('/api/items/:id', async (request, reply) => {
+fastify.get<{ Params: { id: string } }>('/api/items/:id', {
+  schema: {
+    summary: 'Get item by ID',
+    tags: ['items'],
+    params: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' }
+      }
+    }
+  }
+}, async (request, reply) => {
   const { id } = request.params
   return {
     item_id: parseInt(id),

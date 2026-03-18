@@ -8,6 +8,8 @@
 - **tsx** - Fast TS execution with watch mode
 - **@fastify/helmet** - HTTP security headers (enabled by default)
 - **@fastify/rate-limit** - Request rate limiting (enabled by default)
+- **@fastify/swagger** - OpenAPI 3.0 spec generation (enabled by default)
+- **@fastify/swagger-ui** - Swagger UI at /docs (dev/staging only)
 
 ## Development Commands
 
@@ -280,8 +282,12 @@ await fastify.register(fastifyStatic, {
 
 ## Validation (JSON Schema)
 
+Route schemas validate input and also feed into the auto-generated OpenAPI docs — add `summary` and `tags` to control how a route appears in Swagger UI.
+
 ```typescript
 const itemSchema = {
+  summary: 'Create an item',
+  tags: ['items'],
   body: {
     type: 'object',
     required: ['name', 'price'],
@@ -296,6 +302,39 @@ fastify.post('/api/items', { schema: itemSchema }, async (request, reply) => {
   return { created: request.body }
 })
 ```
+
+## API Documentation
+
+`@fastify/swagger` and `@fastify/swagger-ui` are pre-installed and registered by default in `src/index.ts`.
+
+```bash
+npm install @fastify/swagger @fastify/swagger-ui
+```
+
+```typescript
+import swagger from '@fastify/swagger'
+import swaggerUi from '@fastify/swagger-ui'
+
+// Register after security plugins, before routes
+await fastify.register(swagger, {
+  openapi: {
+    openapi: '3.0.0',
+    info: { title: 'My API', description: 'API docs', version: '1.0.0' }
+  }
+})
+
+// Only expose docs UI outside production
+if (process.env.NODE_ENV !== 'production') {
+  await fastify.register(swaggerUi, { routePrefix: '/docs' })
+}
+```
+
+| Endpoint | Description |
+|----------|-------------|
+| `/docs` | Swagger UI (dev/staging only — disabled when `NODE_ENV=production`) |
+| `/docs/json` | Raw OpenAPI JSON schema |
+
+Routes contribute to the spec automatically when their `schema` includes `summary` and `tags`.
 
 ## Testing
 
