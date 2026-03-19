@@ -1,8 +1,5 @@
-import dotenv from 'dotenv'
 import { buildApp } from './app.js'
 import { config } from './config.js'
-
-dotenv.config()
 
 const start = async () => {
   const fastify = await buildApp()
