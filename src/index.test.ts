@@ -6,7 +6,6 @@ let app: FastifyInstance
 
 beforeAll(async () => {
   app = await buildApp()
-  await app.ready()
 })
 
 afterAll(async () => {
