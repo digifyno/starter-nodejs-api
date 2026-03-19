@@ -34,9 +34,15 @@ npm start
 
 ```
 src/
-└── index.ts         # Fastify app entry point
-dist/               # Build output + static files
-tsconfig.json       # TypeScript config
+├── index.ts          # Server entry point (listen, graceful shutdown)
+├── app.ts            # App factory — buildApp() registers plugins + routes
+├── config.ts         # Environment variable validation (zod)
+├── index.test.ts     # Route integration tests
+└── config.test.ts    # Env schema unit tests
+dist/
+└── index.html        # Landing page served at GET /
+tsconfig.json         # TypeScript config (NodeNext ESM)
+vitest.config.ts      # Test runner config
 ```
 
 ## Key Patterns
@@ -135,6 +141,8 @@ fastify.register(myPlugin)
 
 ## Environment Variables
 
+Copy `.env.example` to `.env` to configure local environment variables.
+
 ```typescript
 import dotenv from 'dotenv'
 dotenv.config()
@@ -183,11 +191,7 @@ fastify.get('/api/users', async () => {
 
 ## Security
 
-`@fastify/helmet` and `@fastify/rate-limit` are pre-installed and registered by default in `src/index.ts`.
-
-```bash
-npm install @fastify/helmet @fastify/rate-limit
-```
+`@fastify/helmet` and `@fastify/rate-limit` are pre-installed and registered by default in `src/index.ts` — both are already included in `package.json` — no install needed.
 
 ```typescript
 import helmet from '@fastify/helmet'
@@ -348,29 +352,24 @@ npm run test:watch  # Watch mode
 Example test:
 ```typescript
 // src/index.test.ts
-import { test, expect, beforeAll, afterAll } from 'vitest'
-import Fastify from 'fastify'
+import { describe, test, expect, beforeAll, afterAll } from 'vitest'
 import type { FastifyInstance } from 'fastify'
+import { buildApp } from './app.js'
 
 let app: FastifyInstance
 
 beforeAll(async () => {
-  app = Fastify()
-  app.get('/health', async () => ({ status: 'ok' }))
-  await app.ready()
+  app = await buildApp()
 })
 
 afterAll(async () => {
   await app.close()
 })
 
-test('GET /health returns 200 with ok status', async () => {
-  const response = await app.inject({
-    method: 'GET',
-    url: '/health'
-  })
+test('GET /health returns 200 with healthy status', async () => {
+  const response = await app.inject({ method: 'GET', url: '/health' })
   expect(response.statusCode).toBe(200)
-  expect(response.json()).toEqual({ status: 'ok' })
+  expect(response.json().status).toBe('healthy')
 })
 ```
 

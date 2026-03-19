@@ -26,6 +26,10 @@ interface Item {
 }
 
 export async function buildApp(): Promise<FastifyInstance> {
+  // Read HTML once at startup (not on every request)
+  const htmlPath = join(__dirname, '../dist/index.html')
+  const indexHtml = existsSync(htmlPath) ? readFileSync(htmlPath, 'utf-8') : null
+
   const fastify = Fastify({
     logger: true
   })
@@ -60,12 +64,8 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   // Routes
   fastify.get('/', async (request, reply) => {
-    // Serve dist/index.html if it exists
-    const htmlPath = join(__dirname, '../dist/index.html')
-
-    if (existsSync(htmlPath)) {
-      const html = readFileSync(htmlPath, 'utf-8')
-      return reply.type('text/html').send(html)
+    if (indexHtml) {
+      return reply.type('text/html').send(indexHtml)
     }
 
     return {
