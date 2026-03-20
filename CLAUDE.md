@@ -2,7 +2,7 @@
 
 ## Stack
 
-- **Node.js 20+**
+- **Node.js 22+ (LTS)**
 - **Fastify** - Fast web framework
 - **TypeScript 5.7+** in strict mode
 - **tsx** - Fast TS execution with watch mode
