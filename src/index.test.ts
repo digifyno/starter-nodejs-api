@@ -57,3 +57,24 @@ test('GET /api/items/:id returns item by id', async () => {
   expect(body.name).toBe('Item 42')
   expect(body.price).toBe(99.99)
 })
+
+test('X-Request-ID header is echoed back when provided', async () => {
+  const response = await app.inject({
+    method: 'GET',
+    url: '/health',
+    headers: { 'x-request-id': 'test-123' }
+  })
+  expect(response.statusCode).toBe(200)
+  expect(response.headers['x-request-id']).toBe('test-123')
+})
+
+test('X-Request-ID is generated when not provided', async () => {
+  const response = await app.inject({
+    method: 'GET',
+    url: '/health'
+  })
+  expect(response.statusCode).toBe(200)
+  const reqId = response.headers['x-request-id']
+  expect(typeof reqId).toBe('string')
+  expect(reqId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)
+})

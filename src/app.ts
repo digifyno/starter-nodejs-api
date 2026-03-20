@@ -7,6 +7,7 @@ import swaggerUi from '@fastify/swagger-ui'
 import { readFileSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { randomUUID } from 'crypto'
 import { config } from './config.js'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -31,7 +32,8 @@ export async function buildApp(): Promise<FastifyInstance> {
   const indexHtml = existsSync(htmlPath) ? readFileSync(htmlPath, 'utf-8') : null
 
   const fastify = Fastify({
-    logger: true
+    logger: true,
+    genReqId: (req) => (req.headers['x-request-id'] as string) || randomUUID()
   })
 
   // Security plugins (registered before routes)
@@ -62,6 +64,11 @@ export async function buildApp(): Promise<FastifyInstance> {
       baseDir: __dirname
     })
   }
+
+  // Echo X-Request-ID on every response
+  fastify.addHook('onSend', async (request, reply) => {
+    reply.header('X-Request-ID', request.id)
+  })
 
   // Routes
   fastify.get('/', async (request, reply) => {
