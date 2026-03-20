@@ -1,0 +1,1 @@
+[{"id":"dist-exists","name":"Build output exists","path":"dist/index.js","type":"file_exists","enabled":true,"runWhen":"post","timeoutMs":5000,"failureMode":"block"},{"id":"tsc-check","name":"TypeScript type check","type":"command","command":"npx tsc --noEmit","enabled":true,"runWhen":"post","timeoutMs":60000,"failureMode":"warn"}]
