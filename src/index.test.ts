@@ -78,3 +78,13 @@ test('X-Request-ID is generated when not provided', async () => {
   expect(typeof reqId).toBe('string')
   expect(reqId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)
 })
+
+test('GET /v1/status returns version, status, and timestamp', async () => {
+  const response = await app.inject({ method: 'GET', url: '/v1/status' })
+  expect(response.statusCode).toBe(200)
+  const body = response.json()
+  expect(body.version).toBe('1')
+  expect(body.status).toBe('ok')
+  expect(typeof body.timestamp).toBe('string')
+  expect(new Date(body.timestamp).toString()).not.toBe('Invalid Date')
+})

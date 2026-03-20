@@ -9,6 +9,7 @@ import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { randomUUID } from 'crypto'
 import { config } from './config.js'
+import v1Routes from './routes/v1/index.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -146,6 +147,8 @@ export async function buildApp(): Promise<FastifyInstance> {
     const { id } = request.params
     return { item_id: parseInt(id), name: `Item ${id}`, price: 99.99 }
   })
+
+  await fastify.register(v1Routes, { prefix: '/v1' })
 
   return fastify
 }
