@@ -27,7 +27,6 @@ interface Item {
 }
 
 export async function buildApp(): Promise<FastifyInstance> {
-  // Read HTML once at startup (not on every request)
   const htmlPath = join(__dirname, '../dist/index.html')
   const indexHtml = existsSync(htmlPath) ? readFileSync(htmlPath, 'utf-8') : null
 
@@ -36,11 +35,9 @@ export async function buildApp(): Promise<FastifyInstance> {
     genReqId: (req) => (req.headers['x-request-id'] as string) || randomUUID()
   })
 
-  // Security plugins (registered before routes)
   await fastify.register(helmet)
   await fastify.register(rateLimit, { max: 100, timeWindow: '1 minute' })
 
-  // API documentation (OpenAPI 3.0) — disabled in production
   await fastify.register(swagger, {
     openapi: {
       openapi: '3.0.0',
@@ -49,33 +46,22 @@ export async function buildApp(): Promise<FastifyInstance> {
         description: 'Auto-generated API documentation',
         version: '1.0.0'
       },
-      servers: [
-        {
-          url: `http://localhost:${config.PORT}`,
-          description: 'Local development server'
-        }
-      ]
+      servers: [{ url: `http://localhost:${config.PORT}`, description: 'Local development server' }]
     }
   })
 
   if (config.NODE_ENV !== 'production') {
-    await fastify.register(swaggerUi, {
-      routePrefix: '/docs',
-      baseDir: __dirname
-    })
+    await fastify.register(swaggerUi, { routePrefix: '/docs', baseDir: __dirname })
   }
 
-  // Echo X-Request-ID on every response
   fastify.addHook('onSend', async (request, reply) => {
     reply.header('X-Request-ID', request.id)
   })
 
-  // Routes
   fastify.get('/', async (request, reply) => {
     if (indexHtml) {
       return reply.type('text/html').send(indexHtml)
     }
-
     return {
       message: 'Fastify Backend',
       docs: config.NODE_ENV !== 'production' ? '/docs' : 'disabled in production',
@@ -83,10 +69,33 @@ export async function buildApp(): Promise<FastifyInstance> {
     }
   })
 
+  fastify.get('/health/live', {
+    schema: {
+      summary: 'Liveness probe',
+      tags: ['health'],
+      response: {
+        200: { type: 'object', properties: { status: { type: 'string' } } }
+      }
+    }
+  }, async () => ({ status: 'ok' }))
+
+  fastify.get('/health/ready', {
+    schema: {
+      summary: 'Readiness probe',
+      tags: ['health'],
+      response: {
+        200: { type: 'object', properties: { status: { type: 'string' } } },
+        503: { type: 'object', properties: { status: { type: 'string' }, error: { type: 'string' } } }
+      }
+    }
+  }, async (request, reply) => {
+    return { status: 'ready' }
+  })
+
   fastify.get<{ Reply: HealthResponse }>('/health', {
     schema: {
-      summary: 'Health check',
-      tags: ['system'],
+      summary: 'Health check (legacy)',
+      tags: ['health'],
       response: {
         200: {
           type: 'object',
@@ -99,18 +108,11 @@ export async function buildApp(): Promise<FastifyInstance> {
       }
     }
   }, async (request, reply) => {
-    return {
-      status: 'healthy',
-      message: 'API is running',
-      timestamp: new Date().toISOString()
-    }
+    return { status: 'healthy', message: 'API is running', timestamp: new Date().toISOString() }
   })
 
   fastify.get('/api/hello', {
-    schema: {
-      summary: 'Hello endpoint',
-      tags: ['api']
-    }
+    schema: { summary: 'Hello endpoint', tags: ['api'] }
   }, async (request, reply) => {
     return { message: 'Hello from Fastify!' }
   })
@@ -131,30 +133,18 @@ export async function buildApp(): Promise<FastifyInstance> {
     }
   }, async (request, reply) => {
     const item = request.body
-    return {
-      status: 'created',
-      item
-    }
+    return { status: 'created', item }
   })
 
   fastify.get<{ Params: { id: string } }>('/api/items/:id', {
     schema: {
       summary: 'Get item by ID',
       tags: ['items'],
-      params: {
-        type: 'object',
-        properties: {
-          id: { type: 'string' }
-        }
-      }
+      params: { type: 'object', properties: { id: { type: 'string' } } }
     }
   }, async (request, reply) => {
     const { id } = request.params
-    return {
-      item_id: parseInt(id),
-      name: `Item ${id}`,
-      price: 99.99
-    }
+    return { item_id: parseInt(id), name: `Item ${id}`, price: 99.99 }
   })
 
   return fastify

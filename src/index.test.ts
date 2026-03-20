@@ -13,10 +13,7 @@ afterAll(async () => {
 })
 
 test('GET /health returns 200 with healthy status', async () => {
-  const response = await app.inject({
-    method: 'GET',
-    url: '/health'
-  })
+  const response = await app.inject({ method: 'GET', url: '/health' })
   expect(response.statusCode).toBe(200)
   const body = response.json()
   expect(body.status).toBe('healthy')
@@ -24,11 +21,20 @@ test('GET /health returns 200 with healthy status', async () => {
   expect(typeof body.timestamp).toBe('string')
 })
 
+test('GET /health/live returns 200 with ok status', async () => {
+  const response = await app.inject({ method: 'GET', url: '/health/live' })
+  expect(response.statusCode).toBe(200)
+  expect(response.json()).toEqual({ status: 'ok' })
+})
+
+test('GET /health/ready returns 200 with ready status', async () => {
+  const response = await app.inject({ method: 'GET', url: '/health/ready' })
+  expect(response.statusCode).toBe(200)
+  expect(response.json()).toEqual({ status: 'ready' })
+})
+
 test('GET /api/hello returns greeting message', async () => {
-  const response = await app.inject({
-    method: 'GET',
-    url: '/api/hello'
-  })
+  const response = await app.inject({ method: 'GET', url: '/api/hello' })
   expect(response.statusCode).toBe(200)
   expect(response.json()).toEqual({ message: 'Hello from Fastify!' })
 })
@@ -47,10 +53,7 @@ test('POST /api/items creates an item', async () => {
 })
 
 test('GET /api/items/:id returns item by id', async () => {
-  const response = await app.inject({
-    method: 'GET',
-    url: '/api/items/42'
-  })
+  const response = await app.inject({ method: 'GET', url: '/api/items/42' })
   expect(response.statusCode).toBe(200)
   const body = response.json()
   expect(body.item_id).toBe(42)
@@ -69,10 +72,7 @@ test('X-Request-ID header is echoed back when provided', async () => {
 })
 
 test('X-Request-ID is generated when not provided', async () => {
-  const response = await app.inject({
-    method: 'GET',
-    url: '/health'
-  })
+  const response = await app.inject({ method: 'GET', url: '/health' })
   expect(response.statusCode).toBe(200)
   const reqId = response.headers['x-request-id']
   expect(typeof reqId).toBe('string')
