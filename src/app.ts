@@ -27,6 +27,8 @@ interface Item {
   price: number
 }
 
+let appReady = false
+
 export async function buildApp(): Promise<FastifyInstance> {
   const htmlPath = join(__dirname, '../dist/index.html')
   const indexHtml = existsSync(htmlPath) ? readFileSync(htmlPath, 'utf-8') : null
@@ -57,6 +59,10 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   fastify.addHook('onSend', async (request, reply) => {
     reply.header('X-Request-ID', request.id)
+  })
+
+  fastify.addHook('onReady', async () => {
+    appReady = true
   })
 
   fastify.get('/', async (request, reply) => {
@@ -90,6 +96,9 @@ export async function buildApp(): Promise<FastifyInstance> {
       }
     }
   }, async (request, reply) => {
+    if (!appReady) {
+      return reply.code(503).send({ status: 'unavailable', error: 'Service not ready' })
+    }
     return { status: 'ready' }
   })
 
