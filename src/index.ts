@@ -6,18 +6,23 @@ const start = async () => {
 
   // Graceful shutdown
   const shutdown = async (signal: string) => {
-    fastify.log.info({ signal }, 'Shutdown signal received, closing server')
+    fastify.log.info({ signal }, 'Received shutdown signal, closing server')
+
+    // Immediately close idle keep-alive connections (Node.js 18.2+)
+    fastify.server.closeIdleConnections()
+
     try {
       await fastify.close()
+      fastify.log.info('Server closed gracefully')
       process.exit(0)
     } catch (err) {
-      fastify.log.error(err, 'Error during shutdown')
+      fastify.log.error(err, 'Error during graceful shutdown')
       process.exit(1)
     }
   }
 
-  process.on('SIGTERM', () => shutdown('SIGTERM'))
-  process.on('SIGINT', () => shutdown('SIGINT'))
+  process.once('SIGTERM', () => shutdown('SIGTERM'))
+  process.once('SIGINT', () => shutdown('SIGINT'))
 
   try {
     await fastify.listen({ port: config.PORT, host: config.HOST })
