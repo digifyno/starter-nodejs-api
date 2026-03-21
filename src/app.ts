@@ -118,7 +118,10 @@ export async function buildApp(): Promise<FastifyInstance> {
         200: { type: 'object', properties: { status: { type: 'string' } } }
       }
     }
-  }, async () => ({ status: 'ok' }))
+  }, async (request, reply) => {
+    reply.header('Cache-Control', 'no-store, no-cache')
+    return { status: 'ok' }
+  })
 
   fastify.get('/health/ready', {
     config: { compress: false },
@@ -131,6 +134,7 @@ export async function buildApp(): Promise<FastifyInstance> {
       }
     }
   }, async (request, reply) => {
+    reply.header('Cache-Control', 'no-store, no-cache')
     if (!appReady) {
       return reply.code(503).send({ status: 'unavailable', error: 'Service not ready' })
     }

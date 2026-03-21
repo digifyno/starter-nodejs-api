@@ -348,6 +348,7 @@ Routes contribute to the spec automatically when their `schema` includes `summar
 vitest is pre-installed. Run tests with:
 
 ```bash
+npm audit --audit-level=high  # Fail on high/critical CVEs
 npm test         # Run once
 npm run test:watch  # Watch mode
 ```
