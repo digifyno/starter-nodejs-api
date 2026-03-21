@@ -10,6 +10,7 @@
 - **@fastify/rate-limit** - Request rate limiting (enabled by default)
 - **@fastify/swagger** - OpenAPI 3.0 spec generation (enabled by default)
 - **@fastify/swagger-ui** - Swagger UI at /docs (dev/staging only)
+- **@fastify/compress** - Response compression (gzip/brotli, enabled by default)
 
 ## Development Commands
 
@@ -204,6 +205,8 @@ await fastify.register(rateLimit, { max: 100, timeWindow: '1 minute' })
 
 `helmet` sets secure HTTP response headers (CSP, HSTS, X-Frame-Options, etc.).
 `rateLimit` limits each IP to 100 requests per minute by default — adjust `max` and `timeWindow` as needed.
+
+Responses are automatically compressed via `@fastify/compress` — no extra configuration needed. Health check endpoints (`/health/live`, `/health/ready`, `/health`) are excluded from compression since their payloads are too small to benefit.
 
 ## CORS
 
