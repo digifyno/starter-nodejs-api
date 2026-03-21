@@ -1,5 +1,5 @@
 import Fastify from 'fastify'
-import type { FastifyInstance } from 'fastify'
+import type { FastifyInstance, FastifyError } from 'fastify'
 import helmet from '@fastify/helmet'
 import rateLimit from '@fastify/rate-limit'
 import swagger from '@fastify/swagger'
@@ -9,6 +9,7 @@ import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { randomUUID } from 'crypto'
 import { config } from './config.js'
+import { createProblemDetail } from './errors.js'
 import v1Routes from './routes/v1/index.js'
 
 const __filename = fileURLToPath(import.meta.url)
@@ -56,6 +57,35 @@ export async function buildApp(): Promise<FastifyInstance> {
   if (config.NODE_ENV !== 'production') {
     await fastify.register(swaggerUi, { routePrefix: '/docs', baseDir: __dirname })
   }
+
+  fastify.setErrorHandler((error: FastifyError, request, reply) => {
+    const statusCode = error.statusCode ?? 500
+
+    reply.header('Content-Type', 'application/problem+json')
+
+    if (statusCode === 400) {
+      return reply.code(400).send(
+        createProblemDetail(400, 'Bad Request', error.message, request.url)
+      )
+    }
+
+    if (statusCode === 404) {
+      return reply.code(404).send(
+        createProblemDetail(404, 'Not Found', 'The requested resource was not found.', request.url)
+      )
+    }
+
+    if (statusCode === 429) {
+      return reply.code(429).send(
+        createProblemDetail(429, 'Too Many Requests', 'Rate limit exceeded. Please try again later.', request.url)
+      )
+    }
+
+    request.log.error(error, 'Unhandled error')
+    return reply.code(statusCode >= 500 ? statusCode : 500).send(
+      createProblemDetail(statusCode >= 500 ? statusCode : 500, 'Internal Server Error', 'An unexpected error occurred.', request.url)
+    )
+  })
 
   fastify.addHook('onSend', async (request, reply) => {
     reply.header('X-Request-ID', request.id)
@@ -154,7 +184,16 @@ export async function buildApp(): Promise<FastifyInstance> {
     }
   }, async (request, reply) => {
     const { id } = request.params
-    return { item_id: parseInt(id), name: `Item ${id}`, price: 99.99 }
+    const numId = parseInt(id, 10)
+
+    if (isNaN(numId) || numId <= 0) {
+      return reply
+        .code(404)
+        .header('Content-Type', 'application/problem+json')
+        .send(createProblemDetail(404, 'Not Found', `Item with id '${id}' was not found.`, request.url))
+    }
+
+    return { item_id: numId, name: `Item ${id}`, price: 99.99 }
   })
 
   await fastify.register(v1Routes, { prefix: '/v1' })

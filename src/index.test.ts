@@ -88,3 +88,31 @@ test('GET /v1/status returns version, status, and timestamp', async () => {
   expect(typeof body.timestamp).toBe('string')
   expect(new Date(body.timestamp).toString()).not.toBe('Invalid Date')
 })
+
+test('POST /api/items with invalid body returns 400 Problem Detail', async () => {
+  const response = await app.inject({
+    method: 'POST',
+    url: '/api/items',
+    payload: { name: 'Widget' } // missing required 'price'
+  })
+  expect(response.statusCode).toBe(400)
+  expect(response.headers['content-type']).toContain('application/problem+json')
+  const body = response.json()
+  expect(body.type).toBe('about:blank')
+  expect(body.title).toBe('Bad Request')
+  expect(body.status).toBe(400)
+  expect(typeof body.detail).toBe('string')
+  expect(body.detail.length).toBeGreaterThan(0)
+})
+
+test('GET /api/items/:id with id=0 returns 404 Problem Detail', async () => {
+  const response = await app.inject({ method: 'GET', url: '/api/items/0' })
+  expect(response.statusCode).toBe(404)
+  expect(response.headers['content-type']).toContain('application/problem+json')
+  const body = response.json()
+  expect(body.type).toBe('about:blank')
+  expect(body.title).toBe('Not Found')
+  expect(body.status).toBe(404)
+  expect(typeof body.detail).toBe('string')
+  expect(body.instance).toBe('/api/items/0')
+})
