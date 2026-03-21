@@ -206,7 +206,7 @@ await fastify.register(rateLimit, { max: 100, timeWindow: '1 minute' })
 `helmet` sets secure HTTP response headers (CSP, HSTS, X-Frame-Options, etc.).
 `rateLimit` limits each IP to 100 requests per minute by default — adjust `max` and `timeWindow` as needed.
 
-Responses are automatically compressed via `@fastify/compress` — no extra configuration needed. Health check endpoints (`/health/live`, `/health/ready`, `/health`) are excluded from compression since their payloads are too small to benefit.
+Responses are automatically compressed via `@fastify/compress` — no extra configuration needed. Health check endpoints (`/health/live`, `/health/ready`, `/health`) are excluded from compression since their payloads are too small to benefit. Liveness and readiness probes (`/health/live`, `/health/ready`) also set `Cache-Control: no-store` to prevent proxy/CDN caching of probe state.
 
 ## CORS
 
