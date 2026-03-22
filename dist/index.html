@@ -115,6 +115,12 @@
             color: #1f2937;
         }
         
+        .desc {
+            color: #6b7280;
+            font-size: 0.85rem;
+            margin-left: auto;
+        }
+        
         .btn {
             display: inline-block;
             text-align: center;
@@ -144,7 +150,7 @@
     <div class="container">
         <div class="card">
             <div class="header">
-                <h1>⚡ Fastify Backend</h1>
+                <h1>&#9889; Fastify Backend</h1>
                 <p class="subtitle">Node.js API is running</p>
             </div>
             
@@ -162,7 +168,18 @@
                     <div class="endpoints">
                         <div class="endpoint">
                             <span class="method">GET</span>
+                            <span class="path">/health/live</span>
+                            <span class="desc">Liveness probe</span>
+                        </div>
+                        <div class="endpoint">
+                            <span class="method">GET</span>
+                            <span class="path">/health/ready</span>
+                            <span class="desc">Readiness probe</span>
+                        </div>
+                        <div class="endpoint">
+                            <span class="method">GET</span>
                             <span class="path">/health</span>
+                            <span class="desc">Health check (legacy)</span>
                         </div>
                         <div class="endpoint">
                             <span class="method">GET</span>
@@ -176,11 +193,16 @@
                             <span class="method">GET</span>
                             <span class="path">/api/items/:id</span>
                         </div>
+                        <div class="endpoint">
+                            <span class="method">GET</span>
+                            <span class="path">/v1/status</span>
+                            <span class="desc">API v1 status</span>
+                        </div>
                     </div>
                 </div>
                 
                 <div style="text-align: center;">
-                    <a href="/health" class="btn">🏥 Check Health</a>
+                    <a href="/health/live" class="btn">&#127973; Check Health</a>
                 </div>
             </div>
         </div>

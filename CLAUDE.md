@@ -35,15 +35,21 @@ npm start
 
 ```
 src/
-├── index.ts          # Server entry point (listen, graceful shutdown)
-├── app.ts            # App factory — buildApp() registers plugins + routes
-├── config.ts         # Environment variable validation (zod)
-├── index.test.ts     # Route integration tests
-└── config.test.ts    # Env schema unit tests
+├── index.ts              # Server entry point (listen, graceful shutdown)
+├── app.ts                # App factory — buildApp() registers plugins + routes
+├── config.ts             # Environment variable validation (zod)
+├── errors.ts             # RFC 9457 Problem Details error helpers
+├── pagination.ts         # Cursor-based pagination utilities
+├── index.test.ts         # Route integration tests
+├── config.test.ts        # Env schema unit tests
+├── pagination.test.ts    # Pagination utility tests
+└── routes/
+    └── v1/
+        └── index.ts      # v1 API routes (/v1/status)
 dist/
-└── index.html        # Landing page served at GET /
-tsconfig.json         # TypeScript config (NodeNext ESM)
-vitest.config.ts      # Test runner config
+└── index.html            # Landing page served at GET /
+tsconfig.json             # TypeScript config (NodeNext ESM)
+vitest.config.ts          # Test runner config
 ```
 
 ## Key Patterns
@@ -87,11 +93,11 @@ import { FastifyError } from 'fastify'
 
 fastify.get('/api/items/:id', async (request, reply) => {
   const { id } = request.params
-  
+
   if (!itemExists(id)) {
     return reply.code(404).send({ error: 'Item not found' })
   }
-  
+
   return { item: {} }
 })
 
@@ -130,7 +136,7 @@ async function myPlugin(fastify, options) {
   fastify.decorate('myUtility', () => {
     return 'Hello'
   })
-  
+
   fastify.get('/plugin-route', async () => {
     return { message: fastify.myUtility() }
   })
@@ -192,7 +198,7 @@ fastify.get('/api/users', async () => {
 
 ## Security
 
-`@fastify/helmet` and `@fastify/rate-limit` are pre-installed and registered by default in `src/index.ts` — both are already included in `package.json` — no install needed.
+`@fastify/helmet` and `@fastify/rate-limit` are pre-installed and registered by default in `src/app.ts` — both are already included in `package.json` — no install needed.
 
 ```typescript
 import helmet from '@fastify/helmet'
@@ -309,7 +315,7 @@ fastify.post('/api/items', { schema: itemSchema }, async (request, reply) => {
 
 ## API Documentation
 
-`@fastify/swagger` and `@fastify/swagger-ui` are pre-installed and registered by default in `src/index.ts`.
+`@fastify/swagger` and `@fastify/swagger-ui` are pre-installed and registered by default in `src/app.ts`.
 
 ```bash
 npm install @fastify/swagger @fastify/swagger-ui
