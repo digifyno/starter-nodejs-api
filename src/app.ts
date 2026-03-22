@@ -5,6 +5,7 @@ import rateLimit from '@fastify/rate-limit'
 import swagger from '@fastify/swagger'
 import swaggerUi from '@fastify/swagger-ui'
 import compress from '@fastify/compress'
+import cors from '@fastify/cors'
 import { readFileSync, existsSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
@@ -42,6 +43,12 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   await fastify.register(helmet)
   await fastify.register(rateLimit, { max: 100, timeWindow: '1 minute' })
+
+  await fastify.register(cors, {
+    origin: config.NODE_ENV === 'production' ? false : true,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  })
 
   await fastify.register(compress, { global: true, encodings: ['br', 'gzip', 'deflate'] })
 

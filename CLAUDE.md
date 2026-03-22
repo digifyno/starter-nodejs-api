@@ -210,15 +210,12 @@ Responses are automatically compressed via `@fastify/compress` — no extra conf
 
 ## CORS
 
-```bash
-npm install @fastify/cors
-```
+`@fastify/cors` is pre-installed and registered by default. In production, CORS is disabled (`origin: false`) — configure your origin allowlist in your app:
 
 ```typescript
-import cors from '@fastify/cors'
-
+// Override in buildApp() or extend in your own plugin:
 await fastify.register(cors, {
-  origin: ['http://localhost:5173', 'https://example.com'],
+  origin: ['https://app.example.com'],
   credentials: true
 })
 ```
