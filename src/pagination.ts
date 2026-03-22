@@ -57,5 +57,11 @@ export function encodeCursor(value: Record<string, unknown>): string {
  * Decodes a cursor produced by encodeCursor back to its original object.
  */
 export function decodeCursor(cursor: string): Record<string, unknown> {
-  return JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'))
+  try {
+    return JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'))
+  } catch {
+    const err = new Error('Invalid cursor: malformed or corrupted pagination token') as Error & { statusCode: number }
+    err.statusCode = 400
+    throw err
+  }
 }

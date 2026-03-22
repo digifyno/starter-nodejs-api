@@ -16,6 +16,19 @@ describe('encodeCursor / decodeCursor', () => {
     const encoded = encodeCursor({ id: 1 })
     expect(encoded).not.toMatch(/[+/=]/)
   })
+
+  test('throws a 400 error on invalid base64url input', () => {
+    const err = (() => { try { decodeCursor('!!!invalid!!!') } catch (e) { return e } })() as Error & { statusCode: number }
+    expect(err).toBeInstanceOf(Error)
+    expect(err.statusCode).toBe(400)
+  })
+
+  test('throws a 400 error on valid base64 but invalid JSON', () => {
+    const badCursor = Buffer.from('not-json').toString('base64url')
+    const err = (() => { try { decodeCursor(badCursor) } catch (e) { return e } })() as Error & { statusCode: number }
+    expect(err).toBeInstanceOf(Error)
+    expect(err.statusCode).toBe(400)
+  })
 })
 
 describe('paginatedResponse', () => {
