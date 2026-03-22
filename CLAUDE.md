@@ -230,6 +230,32 @@ await fastify.register(rateLimit, { max: 100, timeWindow: '1 minute' })
 `helmet` sets secure HTTP response headers (CSP, HSTS, X-Frame-Options, etc.).
 `rateLimit` limits each IP to 100 requests per minute by default — adjust `max` and `timeWindow` as needed.
 
+### Per-Route Rate Limiting
+
+Override the global limit for specific routes using the `config.rateLimit` option:
+
+```typescript
+// Tighter limit for auth/write endpoints (brute-force protection)
+fastify.post('/api/auth/login', {
+  config: { rateLimit: { max: 10, timeWindow: '1 minute' } }
+}, handler)
+
+// Exempt health probes — load balancer checks must not exhaust the rate limit budget
+fastify.get('/health/live', {
+  config: { rateLimit: false }
+}, handler)
+```
+
+**Recommended limits by endpoint type:**
+| Endpoint type | Suggested limit |
+|---|---|
+| Auth / login / token | 10 req/min (brute-force protection) |
+| Write operations (POST/PUT) | 20–30 req/min |
+| Public read endpoints | 100 req/min (global default) |
+| Health probes (`/health/live`, `/health/ready`) | exempt (`rateLimit: false`) |
+
+Both health probe endpoints in this starter already use `config: { rateLimit: false }`.
+
 Responses are automatically compressed via `@fastify/compress` — no extra configuration needed. Health check endpoints (`/health/live`, `/health/ready`, `/health`) are excluded from compression since their payloads are too small to benefit. Liveness and readiness probes (`/health/live`, `/health/ready`) also set `Cache-Control: no-store` to prevent proxy/CDN caching of probe state.
 
 ## CORS (pre-configured)

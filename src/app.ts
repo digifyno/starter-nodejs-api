@@ -117,7 +117,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   })
 
   fastify.get('/health/live', {
-    config: { compress: false },
+    config: { compress: false, rateLimit: false },
     schema: {
       summary: 'Liveness probe',
       tags: ['health'],
@@ -131,7 +131,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   })
 
   fastify.get('/health/ready', {
-    config: { compress: false },
+    config: { compress: false, rateLimit: false },
     schema: {
       summary: 'Readiness probe',
       tags: ['health'],
@@ -174,7 +174,9 @@ export async function buildApp(): Promise<FastifyInstance> {
     return { message: 'Hello from Fastify!' }
   })
 
+  // Per-route override: tighter limit for write operations
   fastify.post<{ Body: Item }>('/api/items', {
+    config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
     schema: {
       summary: 'Create an item',
       tags: ['items'],
