@@ -58,7 +58,12 @@ vitest.config.ts          # Test runner config
 
 ```typescript
 // GET
-fastify.get('/api/data', async (request, reply) => {
+fastify.get('/api/data', {
+  schema: {
+    summary: 'Get all data',
+    tags: ['data']
+  }
+}, async (request, reply) => {
   return { data: [] }
 })
 
@@ -68,7 +73,20 @@ interface CreateItem {
   price: number
 }
 
-fastify.post<{ Body: CreateItem }>('/api/items', async (request, reply) => {
+fastify.post<{ Body: CreateItem }>('/api/items', {
+  schema: {
+    summary: 'Create an item',
+    tags: ['items'],
+    body: {
+      type: 'object',
+      required: ['name', 'price'],
+      properties: {
+        name: { type: 'string' },
+        price: { type: 'number' }
+      }
+    }
+  }
+}, async (request, reply) => {
   const item = request.body
   return { created: item }
 })
@@ -214,7 +232,7 @@ await fastify.register(rateLimit, { max: 100, timeWindow: '1 minute' })
 
 Responses are automatically compressed via `@fastify/compress` — no extra configuration needed. Health check endpoints (`/health/live`, `/health/ready`, `/health`) are excluded from compression since their payloads are too small to benefit. Liveness and readiness probes (`/health/live`, `/health/ready`) also set `Cache-Control: no-store` to prevent proxy/CDN caching of probe state.
 
-## CORS
+## CORS (pre-configured)
 
 `@fastify/cors` is pre-installed and registered by default. In production, CORS is disabled (`origin: false`) — configure your origin allowlist in your app:
 
@@ -315,11 +333,7 @@ fastify.post('/api/items', { schema: itemSchema }, async (request, reply) => {
 
 ## API Documentation
 
-`@fastify/swagger` and `@fastify/swagger-ui` are pre-installed and registered by default in `src/app.ts`.
-
-```bash
-npm install @fastify/swagger @fastify/swagger-ui
-```
+`@fastify/swagger` and `@fastify/swagger-ui` are pre-installed — no install step needed.
 
 ```typescript
 import swagger from '@fastify/swagger'
