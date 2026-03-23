@@ -254,13 +254,13 @@ fastify.get('/health/live', {
 | Public read endpoints | 100 req/min (global default) |
 | Health probes (`/health/live`, `/health/ready`) | exempt (`rateLimit: false`) |
 
-Both health probe endpoints in this starter already use `config: { rateLimit: false }`.
+Both health probe endpoints in this starter already use `config: { rateLimit: false }`. Write routes (`POST /api/items`, `POST /v1/items`) already use `config: { rateLimit: { max: 30, timeWindow: '1 minute' } }`.
 
-Responses are automatically compressed via `@fastify/compress` — no extra configuration needed. Health check endpoints (`/health/live`, `/health/ready`, `/health`) are excluded from compression since their payloads are too small to benefit. Liveness and readiness probes (`/health/live`, `/health/ready`) also set `Cache-Control: no-store` to prevent proxy/CDN caching of probe state.
+Responses are automatically compressed via `@fastify/compress` — no extra configuration needed. Health check endpoints (`/health/live`, `/health/ready`, `/health`) are excluded from compression since their payloads are too small to benefit. All three health endpoints (`/health`, `/health/live`, `/health/ready`) set `Cache-Control: no-store` to prevent proxy/CDN caching of probe state.
 
 ## CORS (pre-configured)
 
-`@fastify/cors` is pre-installed and registered by default. In production, CORS is disabled (`origin: false`) — configure your origin allowlist in your app:
+`@fastify/cors` is pre-installed and registered by default. In **production** (`NODE_ENV=production`), CORS is disabled (`origin: false`). In **development/staging**, all origins are permitted (`origin: true`). Override in `buildApp()` to restrict to specific origins in staging or non-production environments:
 
 ```typescript
 // Override in buildApp() or extend in your own plugin:
@@ -395,6 +395,8 @@ npm audit --audit-level=high  # Fail on high/critical CVEs
 npm test         # Run once
 npm run test:watch  # Watch mode
 ```
+
+> **CI environments**: Use `npm ci` instead of `npm install` for reproducible, locked installs. `npm ci` installs exactly what is in `package-lock.json` and fails if the lockfile is out of sync.
 
 Example test:
 ```typescript
