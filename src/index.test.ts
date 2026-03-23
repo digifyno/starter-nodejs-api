@@ -19,6 +19,7 @@ test('GET /health returns 200 with healthy status', async () => {
   expect(body.status).toBe('healthy')
   expect(body.message).toBe('API is running')
   expect(typeof body.timestamp).toBe('string')
+  expect(response.headers['cache-control']).toBe('no-store')
 })
 
 test('GET /health/live returns 200 with ok status', async () => {

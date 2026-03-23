@@ -149,7 +149,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   })
 
   fastify.get<{ Reply: HealthResponse }>('/health', {
-    config: { compress: false },
+    config: { compress: false, rateLimit: false },
     schema: {
       summary: 'Health check (legacy)',
       tags: ['health'],
@@ -165,6 +165,7 @@ export async function buildApp(): Promise<FastifyInstance> {
       }
     }
   }, async (request, reply) => {
+    reply.header('Cache-Control', 'no-store')
     return { status: 'healthy', message: 'API is running', timestamp: new Date().toISOString() }
   })
 
