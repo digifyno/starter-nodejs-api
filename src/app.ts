@@ -126,7 +126,7 @@ export async function buildApp(): Promise<FastifyInstance> {
       }
     }
   }, async (request, reply) => {
-    reply.header('Cache-Control', 'no-store, no-cache')
+    reply.header('Cache-Control', 'no-store')
     return { status: 'ok' }
   })
 
@@ -141,7 +141,7 @@ export async function buildApp(): Promise<FastifyInstance> {
       }
     }
   }, async (request, reply) => {
-    reply.header('Cache-Control', 'no-store, no-cache')
+    reply.header('Cache-Control', 'no-store')
     if (!appReady) {
       return reply.code(503).send({ status: 'unavailable', error: 'Service not ready' })
     }

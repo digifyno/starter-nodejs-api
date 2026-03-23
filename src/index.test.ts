@@ -117,3 +117,19 @@ test('GET /api/items/:id with id=0 returns 404 Problem Detail', async () => {
   expect(typeof body.detail).toBe('string')
   expect(body.instance).toBe('/api/items/0')
 })
+
+test.each(['/health', '/health/live', '/health/ready'])(
+  'GET %s returns Cache-Control: no-store',
+  async (url) => {
+    const res = await app.inject({ method: 'GET', url })
+    expect(res.headers['cache-control']).toBe('no-store')
+  }
+)
+
+test.each(['/health', '/health/live', '/health/ready'])(
+  'GET %s is not compressed',
+  async (url) => {
+    const res = await app.inject({ method: 'GET', url })
+    expect(res.headers['content-encoding']).toBeUndefined()
+  }
+)
