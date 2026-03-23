@@ -1,4 +1,4 @@
-import { test, expect, beforeAll, afterAll } from 'vitest'
+import { describe, test, expect, beforeAll, afterAll } from 'vitest'
 import type { FastifyInstance } from 'fastify'
 import { buildApp } from './app.js'
 
@@ -133,3 +133,30 @@ test.each(['/health', '/health/live', '/health/ready'])(
     expect(res.headers['content-encoding']).toBeUndefined()
   }
 )
+
+describe('CORS', () => {
+  test('production mode: CORS headers absent on cross-origin request', async () => {
+    const prodApp = await buildApp({ nodeEnv: 'production' })
+    const res = await prodApp.inject({
+      method: 'GET',
+      url: '/health/live',
+      headers: { Origin: 'https://evil.example.com' }
+    })
+    expect(res.headers['access-control-allow-origin']).toBeUndefined()
+    await prodApp.close()
+  })
+
+  test('non-production: CORS preflight returns 204 or 200', async () => {
+    const devApp = await buildApp({ nodeEnv: 'development' })
+    const res = await devApp.inject({
+      method: 'OPTIONS',
+      url: '/health/live',
+      headers: {
+        Origin: 'http://localhost:3000',
+        'Access-Control-Request-Method': 'GET'
+      }
+    })
+    expect([200, 204]).toContain(res.statusCode)
+    await devApp.close()
+  })
+})

@@ -32,7 +32,11 @@ interface Item {
 
 let appReady = false
 
-export async function buildApp(): Promise<FastifyInstance> {
+interface BuildOptions {
+  nodeEnv?: string
+}
+
+export async function buildApp(options?: BuildOptions): Promise<FastifyInstance> {
   const htmlPath = join(__dirname, '../dist/index.html')
   const indexHtml = existsSync(htmlPath) ? readFileSync(htmlPath, 'utf-8') : null
 
@@ -45,7 +49,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   await fastify.register(rateLimit, { max: 100, timeWindow: '1 minute' })
 
   await fastify.register(cors, {
-    origin: config.NODE_ENV === 'production' ? false : true,
+    origin: (options?.nodeEnv ?? config.NODE_ENV) === 'production' ? false : true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   })
