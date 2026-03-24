@@ -13,6 +13,7 @@ interface CreateItemBody {
 const v1Routes: FastifyPluginAsync = async (fastify) => {
   // GET routes inherit the global 100 req/min default — read-only, no override needed
   fastify.get('/status', {
+    config: { compress: false },
     schema: {
       summary: 'API v1 status',
       tags: ['v1'],

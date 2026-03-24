@@ -103,7 +103,9 @@ export async function buildApp(options?: BuildOptions): Promise<FastifyInstance>
     reply.header('X-Request-ID', request.id)
   })
 
-  fastify.get('/', async (request, reply) => {
+  fastify.get('/', {
+    config: { compress: false }
+  }, async (request, reply) => {
     if (indexHtml) {
       return reply.type('text/html').send(indexHtml)
     }

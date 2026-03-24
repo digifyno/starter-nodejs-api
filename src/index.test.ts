@@ -139,7 +139,7 @@ test.each(['/health', '/health/live', '/health/ready'])(
   }
 )
 
-test.each(['/health', '/health/live', '/health/ready'])(
+test.each(['/', '/health', '/health/live', '/health/ready', '/v1/status'])(
   'GET %s is not compressed',
   async (url) => {
     const res = await app.inject({ method: 'GET', url })
