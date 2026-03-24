@@ -258,6 +258,17 @@ Both health probe endpoints in this starter already use `config: { rateLimit: fa
 
 Responses are automatically compressed via `@fastify/compress` — no extra configuration needed. Health check endpoints (`/health/live`, `/health/ready`, `/health`) are excluded from compression since their payloads are too small to benefit. All three health endpoints (`/health`, `/health/live`, `/health/ready`) set `Cache-Control: no-store` to prevent proxy/CDN caching of probe state.
 
+`/health/ready` performs a real `server.listening` check — it returns 503 `{ status: "not_ready" }` if the Fastify server has not finished binding to a port (e.g., during initialization). Apps with external dependencies should extend this check with their own readiness logic, for example:
+
+```typescript
+// Example: add a database connectivity check
+try {
+  await pool.query("SELECT 1")
+} catch {
+  return reply.code(503).send({ status: "not_ready" })
+}
+```
+
 ## CORS (pre-configured)
 
 `@fastify/cors` is pre-installed and registered by default. In **production** (`NODE_ENV=production`), CORS is disabled (`origin: false`). In **development/staging**, all origins are permitted (`origin: true`). Override in `buildApp()` to restrict to specific origins in staging or non-production environments:

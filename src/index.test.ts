@@ -28,10 +28,23 @@ test('GET /health/live returns 200 with ok status', async () => {
   expect(response.json()).toEqual({ status: 'ok' })
 })
 
-test('GET /health/ready returns 200 with ready status', async () => {
+test('GET /health/ready returns 503 before server.listen() is called', async () => {
+  // server.listening is false when using inject() without calling listen() first
+  // This is the 503 path: the server has not finished binding to a port
   const response = await app.inject({ method: 'GET', url: '/health/ready' })
+  expect(response.statusCode).toBe(503)
+  expect(response.json()).toEqual({ status: 'not_ready' })
+})
+
+test('GET /health/ready returns 200 once server is listening', async () => {
+  // Use a separate app instance to avoid interfering with the shared test app.
+  // Bind to a random port so server.listening becomes true, then verify ready.
+  const listeningApp = await buildApp()
+  await listeningApp.listen({ port: 0 })
+  const response = await listeningApp.inject({ method: 'GET', url: '/health/ready' })
   expect(response.statusCode).toBe(200)
   expect(response.json()).toEqual({ status: 'ready' })
+  await listeningApp.close()
 })
 
 test('GET /api/hello returns greeting message', async () => {

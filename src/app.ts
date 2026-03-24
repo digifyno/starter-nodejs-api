@@ -30,8 +30,6 @@ interface Item {
   price: number
 }
 
-let appReady = false
-
 interface BuildOptions {
   nodeEnv?: string
 }
@@ -105,10 +103,6 @@ export async function buildApp(options?: BuildOptions): Promise<FastifyInstance>
     reply.header('X-Request-ID', request.id)
   })
 
-  fastify.addHook('onReady', async () => {
-    appReady = true
-  })
-
   fastify.get('/', async (request, reply) => {
     if (indexHtml) {
       return reply.type('text/html').send(indexHtml)
@@ -141,13 +135,13 @@ export async function buildApp(options?: BuildOptions): Promise<FastifyInstance>
       tags: ['health'],
       response: {
         200: { type: 'object', properties: { status: { type: 'string' } } },
-        503: { type: 'object', properties: { status: { type: 'string' }, error: { type: 'string' } } }
+        503: { type: 'object', properties: { status: { type: 'string' } } }
       }
     }
   }, async (request, reply) => {
     reply.header('Cache-Control', 'no-store')
-    if (!appReady) {
-      return reply.code(503).send({ status: 'unavailable', error: 'Service not ready' })
+    if (!fastify.server.listening) {
+      return reply.code(503).send({ status: 'not_ready' })
     }
     return { status: 'ready' }
   })
