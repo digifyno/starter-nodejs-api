@@ -256,6 +256,25 @@ fastify.get('/health/live', {
 
 Both health probe endpoints in this starter already use `config: { rateLimit: false }`. Write routes (`POST /api/items`, `POST /v1/items`) already use `config: { rateLimit: { max: 30, timeWindow: '1 minute' } }`.
 
+### Rate Limiting: Single-Instance Limitation
+
+`@fastify/rate-limit` stores counters **in memory by default**. This works correctly for single-instance deployments but does **not** share state across multiple instances. In a horizontally scaled deployment (multiple pods/processes behind a load balancer), each instance tracks requests independently — effectively multiplying the allowed rate by the number of instances.
+
+For multi-instance deployments, use a Redis-backed store:
+
+```bash
+npm install @fastify/rate-limit ioredis
+```
+
+```typescript
+import Redis from 'ioredis'
+await fastify.register(rateLimit, {
+  max: 100,
+  timeWindow: '1 minute',
+  redis: new Redis({ host: process.env.REDIS_HOST })
+})
+```
+
 Responses are automatically compressed via `@fastify/compress` — no extra configuration needed. Health check endpoints (`/health/live`, `/health/ready`, `/health`), the root discovery endpoint (`GET /`), and status routes (`GET /v1/status`) are excluded from compression since their payloads are too small to benefit.
 
 **Rule**: Routes with consistently small, fixed-size payloads (<1KB) should use `config: { compress: false }` to avoid compression CPU overhead with no size benefit (compression ratio approaches 1:1 or worse on tiny JSON). Do **not** apply this to routes that may return large or variable-size payloads (e.g., bulk data endpoints, `/docs/json` OpenAPI spec). All three health endpoints (`/health`, `/health/live`, `/health/ready`) set `Cache-Control: no-store` to prevent proxy/CDN caching of probe state.
