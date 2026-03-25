@@ -147,6 +147,24 @@ test.each(['/', '/health', '/health/live', '/health/ready', '/v1/status'])(
   }
 )
 
+
+test('GET / serves landing page with 200', async () => {
+  const response = await app.inject({ method: 'GET', url: '/' })
+  expect(response.statusCode).toBe(200)
+  expect(response.headers['content-type']).toMatch(/html/)
+})
+
+// /docs/json is registered only when NODE_ENV !== 'production' (swaggerUi plugin conditional in app.ts)
+test('GET /docs/json returns valid OpenAPI spec', async () => {
+  const response = await app.inject({ method: 'GET', url: '/docs/json' })
+  expect(response.statusCode).toBe(200)
+  const spec = response.json()
+  expect(spec.openapi).toBe('3.0.0')
+  expect(spec.info).toBeDefined()
+  expect(spec.paths).toBeDefined()
+  expect(spec.paths['/v1/status']).toBeDefined()
+})
+
 describe('CORS', () => {
   test('production mode: CORS headers absent on cross-origin request', async () => {
     const prodApp = await buildApp({ nodeEnv: 'production' })
