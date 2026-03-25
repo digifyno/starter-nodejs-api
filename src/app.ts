@@ -99,6 +99,13 @@ export async function buildApp(options?: BuildOptions): Promise<FastifyInstance>
     )
   })
 
+  fastify.setNotFoundHandler((request, reply) => {
+    reply
+      .header('Content-Type', 'application/problem+json')
+      .code(404)
+      .send(createProblemDetail(404, 'Not Found', 'The requested resource was not found.', request.url))
+  })
+
   fastify.addHook('onSend', async (request, reply) => {
     reply.header('X-Request-ID', request.id)
   })
