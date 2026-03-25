@@ -435,6 +435,68 @@ test('GET /health returns 200 with healthy status', async () => {
 })
 ```
 
+
+### Rate-Limit 429 Integration Tests
+
+Test that rate-limited endpoints return HTTP 429 with the correct response shape and `Retry-After` / `X-RateLimit-*` headers. Use `app.inject()` in a loop to exhaust the configured limit:
+
+```typescript
+test('POST /api/items returns 429 after exceeding rate limit', async () => {
+  const limit = 30 // matches config.rateLimit.max for write routes
+  // Exhaust the limit
+  for (let i = 0; i < limit; i++) {
+    await app.inject({ method: 'POST', url: '/api/items', payload: { name: 'x', price: 1 } })
+  }
+  // Next request should be rate-limited
+  const response = await app.inject({ method: 'POST', url: '/api/items', payload: { name: 'x', price: 1 } })
+  expect(response.statusCode).toBe(429)
+  expect(response.headers['retry-after']).toBeDefined()
+  expect(response.headers['x-ratelimit-limit']).toBeDefined()
+  expect(response.json()).toMatchObject({ statusCode: 429 })
+})
+```
+
+**Note**: `@fastify/rate-limit` stores counters in-memory by default. In tests, build a **fresh** `app` instance per `describe` block (or use `afterEach(() => app.close())`) so rate-limit counters reset between tests.
+
+## CI/CD (GitHub Actions)
+
+Cache npm dependencies with `actions/cache` to speed up CI runs. The cache key uses the `package-lock.json` hash so it invalidates automatically when dependencies change:
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm test
+      - run: npm audit --audit-level=high --omit=dev
+```
+
+`actions/cache` caches `~/.npm` (the global npm cache). `npm ci` reuses it on cache hits, reducing install time on repeat runs.
+
 ## Production Build
 
 ```bash
