@@ -52,6 +52,11 @@ tsconfig.json             # TypeScript config (NodeNext ESM)
 vitest.config.ts          # Test runner config
 ```
 
+## Forbidden Actions
+
+- **DO NOT create, modify, or delete any files under `.github/workflows/`** — GitHub Actions workflow files require a special `workflow` PAT scope that is not available to RSI workers. Any push containing workflow file changes will be rejected by GitHub with a non-retryable error, wasting the entire task cycle.
+- DO NOT create files named `*.yml` or `*.yaml` inside `.github/` at any level unless explicitly instructed with a confirmed PAT scope upgrade.
+
 ## Key Patterns
 
 ### Define Routes
@@ -478,6 +483,8 @@ test('POST /api/items returns 429 after exceeding rate limit', async () => {
 **Note**: `@fastify/rate-limit` stores counters in-memory by default. In tests, build a **fresh** `app` instance per `describe` block (or use `afterEach(() => app.close())`) so rate-limit counters reset between tests.
 
 ## CI/CD (GitHub Actions)
+
+> **Note for RSI workers**: The CI configuration below is shown as reference only. Do NOT create or modify `.github/workflows/ci.yml` or any workflow file — the RSI PAT does not have `workflow` scope and pushes containing these files will be rejected by GitHub with a non-retryable error.
 
 Cache npm dependencies with `actions/cache` to speed up CI runs. The cache key uses the `package-lock.json` hash so it invalidates automatically when dependencies change:
 
