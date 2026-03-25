@@ -93,6 +93,12 @@ export async function buildApp(options?: BuildOptions): Promise<FastifyInstance>
       )
     }
 
+    if (statusCode === 413) {
+      return reply.code(413).send(
+        createProblemDetail(413, 'Payload Too Large', 'Request body exceeds the 1MB size limit.', request.url)
+      )
+    }
+
     request.log.error(error, 'Unhandled error')
     return reply.code(statusCode >= 500 ? statusCode : 500).send(
       createProblemDetail(statusCode >= 500 ? statusCode : 500, 'Internal Server Error', 'An unexpected error occurred.', request.url)

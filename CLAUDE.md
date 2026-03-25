@@ -295,6 +295,16 @@ try {
 }
 ```
 
+## Request Limits
+
+Fastify enforces a default body size limit of 1MB (`bodyLimit: 1048576`). Override in `buildApp()` for endpoints that need larger payloads:
+
+```typescript
+const fastify = Fastify({ bodyLimit: 5 * 1024 * 1024 }) // 5MB
+```
+
+For file upload routes using `@fastify/multipart`, set the limit at the plugin level instead.
+
 ## CORS (pre-configured)
 
 `@fastify/cors` is pre-installed and registered by default. In **production** (`NODE_ENV=production`), CORS is disabled (`origin: false`). In **development/staging**, all origins are permitted (`origin: true`). Override in `buildApp()` to restrict to specific origins in staging or non-production environments:

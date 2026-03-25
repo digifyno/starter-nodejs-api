@@ -165,6 +165,16 @@ test('GET /docs/json returns valid OpenAPI spec', async () => {
   expect(spec.paths['/v1/status']).toBeDefined()
 })
 
+test('POST with oversized body returns 413', async () => {
+  const largePayload = { name: 'x'.repeat(2 * 1024 * 1024), price: 1 }
+  const response = await app.inject({
+    method: 'POST',
+    url: '/api/items',
+    payload: largePayload
+  })
+  expect(response.statusCode).toBe(413)
+})
+
 describe('CORS', () => {
   test('production mode: CORS headers absent on cross-origin request', async () => {
     const prodApp = await buildApp({ nodeEnv: 'production' })
