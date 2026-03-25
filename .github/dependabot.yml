@@ -14,3 +14,10 @@ updates:
       security-patches:
         update-types:
           - 'patch'
+
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '08:00'
