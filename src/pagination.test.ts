@@ -82,3 +82,35 @@ describe('paginationQuerySchema', () => {
     expect(paginationQuerySchema.type).toBe('object')
   })
 })
+
+describe('pagination edge cases', () => {
+  test('decodeCursor throws 400 for empty string', () => {
+    const err = (() => { try { decodeCursor('') } catch (e) { return e } })() as Error & { statusCode: number }
+    expect(err).toBeInstanceOf(Error)
+    expect(err.statusCode).toBe(400)
+  })
+
+  test('encodeCursor/decodeCursor roundtrips unicode and special characters', () => {
+    const value = { name: 'héllo wörld 🎉', query: "<>&'" }
+    expect(decodeCursor(encodeCursor(value))).toEqual(value)
+  })
+
+  test('encodeCursor/decodeCursor roundtrips arrays and null values', () => {
+    const value = { tags: ['a', 'b', 'c'], count: 0, extra: null }
+    expect(decodeCursor(encodeCursor(value))).toEqual(value)
+  })
+
+  test('paginatedResponse preserves all items when nextCursor is null', () => {
+    const items = [{ id: 1 }, { id: 2 }, { id: 3 }]
+    const result = paginatedResponse(items, null)
+    expect(result.data).toEqual(items)
+    expect(result.pagination.nextCursor).toBeNull()
+    expect(result.pagination.hasMore).toBe(false)
+  })
+
+  test('paginationQuerySchema cursor field is optional (no required constraint)', () => {
+    const schema = paginationQuerySchema as unknown as { required?: string[] }
+    const required = schema.required ?? []
+    expect(required).not.toContain('cursor')
+  })
+})
