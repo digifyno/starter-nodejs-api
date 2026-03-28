@@ -12,6 +12,22 @@ interface CreateItemBody {
 }
 
 const v1Routes: FastifyPluginAsync = async (fastify) => {
+  fastify.get('/ping', {
+    config: { compress: false },
+    schema: {
+      summary: 'Ping health check',
+      tags: ['v1'],
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            pong: { type: 'string' }
+          }
+        }
+      }
+    }
+  }, async () => ({ pong: 'ok' }))
+
   // GET routes inherit the global 100 req/min default — read-only, no override needed
   fastify.get('/status', {
     config: { compress: false },
