@@ -12,6 +12,12 @@ afterAll(async () => {
   await app.close()
 })
 
+test('GET /v1/ping returns 200 with pong response', async () => {
+  const response = await app.inject({ method: 'GET', url: '/v1/ping' })
+  expect(response.statusCode).toBe(200)
+  expect(response.json()).toEqual({ pong: 'ok' })
+})
+
 describe('GET /v1/status', () => {
   test('returns version, status, and timestamp', async () => {
     const response = await app.inject({ method: 'GET', url: '/v1/status' })
