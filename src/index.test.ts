@@ -22,6 +22,12 @@ test('GET /health returns 200 with healthy status', async () => {
   expect(response.headers['cache-control']).toBe('no-store')
 })
 
+test('GET /ping returns 200 with pong response', async () => {
+  const response = await app.inject({ method: 'GET', url: '/ping' })
+  expect(response.statusCode).toBe(200)
+  expect(response.json()).toEqual({ pong: 'ok' })
+})
+
 test('GET /health/live returns 200 with ok status', async () => {
   const response = await app.inject({ method: 'GET', url: '/health/live' })
   expect(response.statusCode).toBe(200)
@@ -139,7 +145,7 @@ test.each(['/health', '/health/live', '/health/ready'])(
   }
 )
 
-test.each(['/', '/health', '/health/live', '/health/ready', '/v1/status'])(
+test.each(['/', '/health', '/health/live', '/health/ready', '/v1/status', '/ping'])(
   'GET %s is not compressed',
   async (url) => {
     const res = await app.inject({ method: 'GET', url })
