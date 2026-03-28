@@ -182,7 +182,7 @@ export async function buildApp(options?: BuildOptions): Promise<FastifyInstance>
     return { status: 'healthy', message: 'API is running', timestamp: new Date().toISOString() }
   })
 
-  fastify.get('/ping', { config: { compress: false, rateLimit: false } }, async () => 'pong')
+  fastify.get('/ping', { config: { compress: false, rateLimit: false } }, async () => ({ pong: 'ok' }))
 
   fastify.get('/api/hello', {
     schema: { summary: 'Hello endpoint', tags: ['api'] }
