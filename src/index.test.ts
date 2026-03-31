@@ -154,9 +154,11 @@ test('GET / serves landing page with 200', async () => {
   expect(response.headers['content-type']).toMatch(/html/)
 })
 
-// /docs/json is registered only when NODE_ENV !== 'production' (swaggerUi plugin conditional in app.ts)
+// /docs/json is registered only when NODE_ENV !== 'production' — use explicit nodeEnv to be environment-independent
 test('GET /docs/json returns valid OpenAPI spec', async () => {
-  const response = await app.inject({ method: 'GET', url: '/docs/json' })
+  const devApp = await buildApp({ nodeEnv: 'development' })
+  const response = await devApp.inject({ method: 'GET', url: '/docs/json' })
+  await devApp.close()
   expect(response.statusCode).toBe(200)
   const spec = response.json()
   expect(spec.openapi).toBe('3.0.0')
