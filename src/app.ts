@@ -46,8 +46,10 @@ export async function buildApp(options?: BuildOptions): Promise<FastifyInstance>
   await fastify.register(helmet)
   await fastify.register(rateLimit, { max: 100, timeWindow: '1 minute' })
 
+  const effectiveEnv = options?.nodeEnv ?? config.NODE_ENV
+
   await fastify.register(cors, {
-    origin: (options?.nodeEnv ?? config.NODE_ENV) === 'production' ? false : true,
+    origin: effectiveEnv === 'production' ? false : true,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   })
@@ -66,7 +68,7 @@ export async function buildApp(options?: BuildOptions): Promise<FastifyInstance>
     }
   })
 
-  if (config.NODE_ENV !== 'production') {
+  if (effectiveEnv !== 'production') {
     await fastify.register(swaggerUi, { routePrefix: '/docs', baseDir: __dirname })
   }
 
