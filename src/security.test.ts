@@ -12,6 +12,46 @@ afterAll(async () => {
   await app.close()
 })
 
+describe('CORS configuration', () => {
+  test('listed origin receives Access-Control-Allow-Origin reflecting that origin', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/health',
+      headers: { origin: 'http://localhost:3000' },
+    })
+    expect(res.headers['access-control-allow-origin']).toBe('http://localhost:3000')
+  })
+
+  test('Access-Control-Allow-Origin is never wildcard (*) when credentials are enabled', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/health',
+      headers: { origin: 'http://localhost:3000' },
+    })
+    expect(res.headers['access-control-allow-origin']).not.toBe('*')
+  })
+
+  test('Vary: Origin header is present for credentialed CORS responses', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/health',
+      headers: { origin: 'http://localhost:3000' },
+    })
+    const vary = res.headers['vary'] as string | undefined
+    expect(vary).toBeDefined()
+    expect(vary!.toLowerCase()).toContain('origin')
+  })
+
+  test('unlisted origin does not receive Access-Control-Allow-Origin header', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/health',
+      headers: { origin: 'http://evil.example.com' },
+    })
+    expect(res.headers['access-control-allow-origin']).toBeUndefined()
+  })
+})
+
 describe('Helmet security headers', () => {
   const routes = ['/health', '/health/live', '/v1/status']
 

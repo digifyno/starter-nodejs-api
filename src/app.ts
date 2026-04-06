@@ -49,7 +49,7 @@ export async function buildApp(options?: BuildOptions): Promise<FastifyInstance>
   const effectiveEnv = options?.nodeEnv ?? config.NODE_ENV
 
   await fastify.register(cors, {
-    origin: effectiveEnv === 'production' ? false : true,
+    origin: effectiveEnv === 'production' ? false : config.ALLOWED_ORIGINS,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   })

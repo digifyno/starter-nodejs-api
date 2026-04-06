@@ -13,6 +13,10 @@ export const envSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'production', 'test'])
     .default('development'),
+  ALLOWED_ORIGINS: z
+    .string()
+    .default('http://localhost:3000,http://localhost:5173')
+    .transform(s => s.split(',').map(o => o.trim()).filter(Boolean)),
 })
 
 export type EnvConfig = z.infer<typeof envSchema>
