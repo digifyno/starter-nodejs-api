@@ -1,0 +1,14 @@
+[
+  {
+    "id": "anthropic-401-auth-error",
+    "name": "Anthropic API 401 Authentication Error",
+    "description": "Worker process exited because the Anthropic API rejected the API key. The key is invalid, expired, or absent. No retry can succeed until the credential is rotated at the platform level.",
+    "matchPatterns": [
+      "Failed to authenticate. API Error: 401",
+      "\"type\":\"authentication_error\""
+    ],
+    "classification": "environmental/infrastructure",
+    "retryable": false,
+    "recoveryAction": "Rotate or refresh the worker's ANTHROPIC_API_KEY at the platform level before scheduling a new task cycle."
+  }
+]
