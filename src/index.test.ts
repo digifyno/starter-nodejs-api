@@ -192,7 +192,7 @@ test('GET /docs/json returns valid OpenAPI spec', async () => {
   expect(spec.paths['/v1/status']).toBeDefined()
 })
 
-test('POST with oversized body returns 413', async () => {
+test('POST with oversized body returns 413 with RFC 9457 Problem Detail', async () => {
   const largePayload = { name: 'x'.repeat(2 * 1024 * 1024), price: 1 }
   const response = await app.inject({
     method: 'POST',
@@ -200,6 +200,13 @@ test('POST with oversized body returns 413', async () => {
     payload: largePayload
   })
   expect(response.statusCode).toBe(413)
+  expect(response.headers['content-type']).toContain('application/problem+json')
+  const body = response.json()
+  expect(body.type).toBe('about:blank')
+  expect(body.title).toBe('Payload Too Large')
+  expect(body.status).toBe(413)
+  expect(typeof body.detail).toBe('string')
+  expect(body.detail.length).toBeGreaterThan(0)
 })
 
 describe('CORS', () => {

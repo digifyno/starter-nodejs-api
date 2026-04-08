@@ -30,9 +30,11 @@ describe('Rate limiting', () => {
     expect(response!.headers['retry-after']).toBeDefined()
 
     const body = response!.json()
-    expect(body).toBeTruthy()
-    // @fastify/rate-limit with RFC 9457 Problem Details returns { type, title, status, detail, instance }
-    expect(body.title || body.detail || body.error || body.message).toBeTruthy()
+    expect(response!.headers['content-type']).toContain('application/problem+json')
+    expect(body.type).toBe('about:blank')
+    expect(body.title).toBe('Too Many Requests')
+    expect(body.status).toBe(429)
+    expect(typeof body.detail).toBe('string')
   })
 
   test('GET /v1/status returns 429 after exceeding global 100 req/min limit', async () => {
