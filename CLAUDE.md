@@ -111,26 +111,49 @@ fastify.get<{ Querystring: { limit: string } }>('/api/items', async (request, re
 
 ### Error Handling
 
-```typescript
-import { FastifyError } from 'fastify'
+Use the RFC 9457 Problem Details helpers from `src/errors.ts`:
 
-fastify.get('/api/items/:id', async (request, reply) => {
+```typescript
+import { createProblemDetail } from './errors.js'
+
+// In route handlers — return a Problem Details response for business-logic errors:
+fastify.get<{ Params: { id: string } }>('/api/items/:id', async (request, reply) => {
   const { id } = request.params
 
   if (!itemExists(id)) {
-    return reply.code(404).send({ error: 'Item not found' })
+    return reply
+      .code(404)
+      .header('Content-Type', 'application/problem+json')
+      .send(createProblemDetail(404, 'Not Found', `Item with id '${id}' was not found.`, request.url))
   }
 
   return { item: {} }
 })
 
-// Error handler
-fastify.setErrorHandler((error: FastifyError, request, reply) => {
-  fastify.log.error(error)
-  reply.status(error.statusCode || 500).send({
-    error: error.message
-  })
+// The global error handler (already registered in buildApp()) handles 400, 404, 429, 413, 500
+// automatically via createProblemDetail — individual routes only need to handle
+// business-logic 404s and similar cases explicitly.
+```
+
+### Cursor-Based Pagination
+
+Use the pagination utilities from `src/pagination.ts`:
+
+```typescript
+import { paginationQuerySchema, paginatedResponse, decodeCursor, encodeCursor } from './pagination.js'
+
+fastify.get<{ Querystring: { limit?: number; cursor?: string } }>('/v1/items', {
+  schema: { querystring: paginationQuerySchema, summary: 'List items', tags: ['v1'] }
+}, async (request) => {
+  const { limit = 20, cursor } = request.query
+  const after = cursor ? decodeCursor(cursor) : null
+  // ... fetch items where id > (after?.id ?? 0), slice to limit + 1 to detect hasMore
+  const hasMore = items.length > limit
+  const page = items.slice(0, limit)
+  const nextCursor = hasMore ? encodeCursor({ id: page[page.length - 1].id }) : null
+  return paginatedResponse(page, nextCursor)
 })
+// Response shape: { data: [...], pagination: { nextCursor: string|null, hasMore: boolean } }
 ```
 
 ### Hooks (Middleware)
