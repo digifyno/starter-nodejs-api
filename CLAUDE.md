@@ -439,9 +439,19 @@ vitest is pre-installed. Run tests with:
 
 ```bash
 npm audit --audit-level=high  # Fail on high/critical CVEs
-npm test         # Run once
-npm run test:watch  # Watch mode
+npm test              # Run once
+npm run test:watch    # Watch mode
+npm run test:coverage # Run with coverage report
 ```
+
+Coverage thresholds are enforced in `vitest.config.ts` — the build fails if any threshold is not met:
+
+| Metric     | Threshold |
+|------------|-----------|
+| Lines      | 75%       |
+| Functions  | 80%       |
+| Branches   | 75%       |
+| Statements | 75%       |
 
 > **CI environments**: Use `npm ci` instead of `npm install` for reproducible, locked installs. `npm ci` installs exactly what is in `package-lock.json` and fails if the lockfile is out of sync.
 
