@@ -38,4 +38,9 @@ describe('Helmet security headers', () => {
     expect(typeof res.headers['content-security-policy']).toBe('string')
     expect((res.headers['content-security-policy'] as string).length).toBeGreaterThan(0)
   })
+
+  test.each(routes)('GET %s sets Strict-Transport-Security header', async (url) => {
+    const res = await app.inject({ method: 'GET', url })
+    expect(res.headers['strict-transport-security']).toBeDefined()
+  })
 })

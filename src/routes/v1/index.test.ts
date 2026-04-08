@@ -65,3 +65,43 @@ describe('POST /v1/items', () => {
     expect(response.statusCode).toBe(429)
   })
 })
+
+describe('GET /v1/items', () => {
+  test('returns first page with default limit', async () => {
+    const response = await app.inject({ method: 'GET', url: '/v1/items' })
+    expect(response.statusCode).toBe(200)
+    const body = response.json()
+    expect(Array.isArray(body.data)).toBe(true)
+    expect(body.data.length).toBe(20)
+    expect(body.pagination).toBeDefined()
+    expect(body.pagination.hasMore).toBe(true)
+    expect(typeof body.pagination.nextCursor).toBe('string')
+  })
+
+  test('respects the limit query param', async () => {
+    const response = await app.inject({ method: 'GET', url: '/v1/items?limit=5' })
+    expect(response.statusCode).toBe(200)
+    const body = response.json()
+    expect(body.data.length).toBe(5)
+  })
+
+  test('returns last page when cursor points near end', async () => {
+    let cursor: string | null = null
+    let pageCount = 0
+    while (pageCount < 10) {
+      const url: string = cursor ? `/v1/items?limit=20&cursor=${cursor}` : '/v1/items?limit=20'
+      const res = await app.inject({ method: 'GET', url })
+      expect(res.statusCode).toBe(200)
+      const body: { pagination: { nextCursor: string | null } } = res.json()
+      cursor = body.pagination.nextCursor
+      pageCount++
+      if (!cursor) break
+    }
+    expect(cursor).toBeNull()
+  })
+
+  test('returns 400 for malformed cursor', async () => {
+    const response = await app.inject({ method: 'GET', url: '/v1/items?cursor=INVALID!!!' })
+    expect(response.statusCode).toBe(400)
+  })
+})
