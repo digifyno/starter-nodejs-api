@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeAll, afterAll } from 'vitest'
+import { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest'
 import type { FastifyInstance } from 'fastify'
 import { buildApp } from '../../app.js'
 
@@ -47,22 +47,29 @@ describe('POST /v1/items', () => {
     expect(response.statusCode).toBe(400)
   })
 
+})
+
+describe('POST /v1/items – rate limiting', () => {
+  let rlApp: FastifyInstance
+
+  beforeEach(async () => {
+    rlApp = await buildApp()
+  })
+
+  afterEach(async () => {
+    await rlApp.close()
+  })
+
   test('returns 429 after exceeding the 30 req/min rate limit', async () => {
-    // Exhaust the per-route limit (30 allowed per minute)
-    for (let i = 0; i < 29; i++) {
-      await app.inject({
+    let response
+    for (let i = 0; i < 31; i++) {
+      response = await rlApp.inject({
         method: 'POST',
         url: '/v1/items',
         payload: { name: 'test', price: 1 }
       })
     }
-    // The next request (31st total including the first two tests) should be rate limited
-    const response = await app.inject({
-      method: 'POST',
-      url: '/v1/items',
-      payload: { name: 'test', price: 1 }
-    })
-    expect(response.statusCode).toBe(429)
+    expect(response!.statusCode).toBe(429)
   })
 })
 
