@@ -66,7 +66,7 @@ export async function buildApp(options?: BuildOptions): Promise<FastifyInstance>
     }
   })
 
-  if (config.NODE_ENV !== 'production') {
+  if ((options?.nodeEnv ?? config.NODE_ENV) !== 'production') {
     await fastify.register(swaggerUi, { routePrefix: '/docs', baseDir: __dirname })
   }
 

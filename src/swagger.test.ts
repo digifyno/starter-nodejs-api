@@ -33,4 +33,11 @@ describe('Swagger UI production gate', () => {
     const response = await prodApp.inject({ method: 'GET', url: '/docs/json' })
     expect(response.statusCode).toBe(404)
   })
+
+  test('buildApp({ nodeEnv: production }) disables swagger UI without vi.mock', async () => {
+    const app = await buildApp({ nodeEnv: 'production' })
+    const res = await app.inject({ method: 'GET', url: '/docs' })
+    expect(res.statusCode).toBe(404)
+    await app.close()
+  })
 })
