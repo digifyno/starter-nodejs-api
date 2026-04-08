@@ -1,6 +1,7 @@
 import { describe, test, expect, beforeAll, afterAll } from 'vitest'
 import type { FastifyInstance } from 'fastify'
 import { buildApp } from './app.js'
+import { createProblemDetail } from './errors.js'
 
 describe('Error handler – RFC 9457 Problem Details', () => {
   let app: FastifyInstance
@@ -78,5 +79,30 @@ describe('Error handler – RFC 9457 Problem Details', () => {
       process.env.NODE_ENV = originalEnv
       await throwApp.close()
     }
+  })
+})
+
+describe('createProblemDetail unit tests', () => {
+  test('returns required RFC 9457 fields', () => {
+    const result = createProblemDetail(400, 'Bad Request', 'Something went wrong')
+    expect(result.type).toBe('about:blank')
+    expect(result.title).toBe('Bad Request')
+    expect(result.status).toBe(400)
+    expect(result.detail).toBe('Something went wrong')
+  })
+
+  test('omits instance when not provided', () => {
+    const result = createProblemDetail(404, 'Not Found', 'missing')
+    expect('instance' in result).toBe(false)
+  })
+
+  test('includes instance when provided', () => {
+    const result = createProblemDetail(400, 'Bad Request', 'detail', '/api/items/abc')
+    expect(result.instance).toBe('/api/items/abc')
+  })
+
+  test.each([400, 404, 413, 429, 500])('status field matches input code %i', (code) => {
+    const result = createProblemDetail(code, 'Error', 'detail')
+    expect(result.status).toBe(code)
   })
 })
