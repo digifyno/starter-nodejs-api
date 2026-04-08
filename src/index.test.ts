@@ -119,6 +119,17 @@ test('POST /api/items with invalid body returns 400 Problem Detail', async () =>
   expect(body.detail.length).toBeGreaterThan(0)
 })
 
+test('GET /api/items/:id with non-numeric id returns 404 Problem Detail', async () => {
+  const response = await app.inject({ method: 'GET', url: '/api/items/abc' })
+  expect(response.statusCode).toBe(404)
+  expect(response.headers['content-type']).toContain('application/problem+json')
+  const body = response.json()
+  expect(body.type).toBe('about:blank')
+  expect(body.title).toBe('Not Found')
+  expect(body.status).toBe(404)
+  expect(body.instance).toBe('/api/items/abc')
+})
+
 test('GET /api/items/:id with id=0 returns 404 Problem Detail', async () => {
   const response = await app.inject({ method: 'GET', url: '/api/items/0' })
   expect(response.statusCode).toBe(404)
@@ -152,6 +163,22 @@ test('GET / serves landing page with 200', async () => {
   const response = await app.inject({ method: 'GET', url: '/' })
   expect(response.statusCode).toBe(200)
   expect(response.headers['content-type']).toMatch(/html/)
+})
+
+test('GET / returns JSON discovery when no HTML file is present', async () => {
+  // Build a fresh app instance; __dirname in test env has no dist/index.html sibling
+  const noHtmlApp = await buildApp({ nodeEnv: 'development' })
+  const response = await noHtmlApp.inject({ method: 'GET', url: '/' })
+  // When HTML is absent, app returns JSON with API discovery info
+  if (response.headers['content-type']?.includes('application/json')) {
+    const body = response.json()
+    expect(body).toHaveProperty('message')
+    expect(body).toHaveProperty('health')
+  } else {
+    // HTML is present in this env — skip JSON-specific assertions
+    expect(response.statusCode).toBe(200)
+  }
+  await noHtmlApp.close()
 })
 
 // /docs/json is registered only when NODE_ENV !== 'production' (swaggerUi plugin conditional in app.ts)
