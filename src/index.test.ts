@@ -263,4 +263,31 @@ describe('CORS', () => {
     expect([200, 204]).toContain(res.statusCode)
     await devApp.close()
   })
+
+  test('non-production: simple GET with Origin returns CORS allow header', async () => {
+    const devApp = await buildApp({ nodeEnv: 'development' })
+    const res = await devApp.inject({
+      method: 'GET',
+      url: '/health/live',
+      headers: { Origin: 'http://localhost:3001' }
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.headers['access-control-allow-origin']).toBeDefined()
+    await devApp.close()
+  })
+
+  test('non-production: CORS preflight response includes Access-Control-Allow-Credentials', async () => {
+    const devApp = await buildApp({ nodeEnv: 'development' })
+    const res = await devApp.inject({
+      method: 'OPTIONS',
+      url: '/api/items',
+      headers: {
+        Origin: 'http://localhost:3001',
+        'Access-Control-Request-Method': 'POST'
+      }
+    })
+    expect([200, 204]).toContain(res.statusCode)
+    expect(res.headers['access-control-allow-credentials']).toBe('true')
+    await devApp.close()
+  })
 })

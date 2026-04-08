@@ -112,3 +112,27 @@ describe('GET /v1/items', () => {
     expect(response.statusCode).toBe(400)
   })
 })
+
+describe('GET /v1/items – limit boundary validation', () => {
+  test('returns 400 when limit=0 (below minimum)', async () => {
+    const res = await app.inject({ method: 'GET', url: '/v1/items?limit=0' })
+    expect(res.statusCode).toBe(400)
+  })
+
+  test('returns 400 when limit=101 (above maximum)', async () => {
+    const res = await app.inject({ method: 'GET', url: '/v1/items?limit=101' })
+    expect(res.statusCode).toBe(400)
+  })
+
+  test('returns 200 when limit=1 (minimum valid)', async () => {
+    const res = await app.inject({ method: 'GET', url: '/v1/items?limit=1' })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().data.length).toBe(1)
+  })
+
+  test('returns 200 when limit=100 (maximum valid)', async () => {
+    const res = await app.inject({ method: 'GET', url: '/v1/items?limit=100' })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().data.length).toBeLessThanOrEqual(100)
+  })
+})
