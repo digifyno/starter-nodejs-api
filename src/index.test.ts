@@ -209,6 +209,35 @@ test('POST with oversized body returns 413 with RFC 9457 Problem Detail', async 
   expect(body.detail.length).toBeGreaterThan(0)
 })
 
+describe('X-Request-ID is included on error responses', () => {
+  test('400 response includes X-Request-ID', async () => {
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/items',
+      payload: { name: 'Widget' } // missing price
+    })
+    expect(res.statusCode).toBe(400)
+    expect(typeof res.headers['x-request-id']).toBe('string')
+    expect(res.headers['x-request-id']).toMatch(/^[0-9a-f-]{36}$/)
+  })
+
+  test('404 response includes X-Request-ID', async () => {
+    const res = await app.inject({ method: 'GET', url: '/does-not-exist' })
+    expect(res.statusCode).toBe(404)
+    expect(typeof res.headers['x-request-id']).toBe('string')
+  })
+
+  test('X-Request-ID echoes client value on error', async () => {
+    const res = await app.inject({
+      method: 'GET',
+      url: '/does-not-exist',
+      headers: { 'x-request-id': 'client-trace-abc' }
+    })
+    expect(res.statusCode).toBe(404)
+    expect(res.headers['x-request-id']).toBe('client-trace-abc')
+  })
+})
+
 describe('CORS', () => {
   test('production mode: CORS headers absent on cross-origin request', async () => {
     const prodApp = await buildApp({ nodeEnv: 'production' })
