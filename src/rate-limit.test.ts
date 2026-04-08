@@ -64,3 +64,45 @@ describe('Rate limiting', () => {
     expect(response!.headers['retry-after']).toBeDefined()
   })
 })
+
+describe('Health endpoints are exempt from rate limiting', () => {
+  let app: FastifyInstance
+
+  beforeEach(async () => {
+    app = await buildApp()
+  })
+
+  afterEach(async () => {
+    await app.close()
+  })
+
+  test('/health/live still responds after exhausting global rate limit', async () => {
+    // Exhaust global rate limit on a non-exempt endpoint
+    for (let i = 0; i < 100; i++) {
+      await app.inject({ method: 'GET', url: '/api/hello' })
+    }
+    // Verify global limit is actually hit
+    const limitedRes = await app.inject({ method: 'GET', url: '/api/hello' })
+    expect(limitedRes.statusCode).toBe(429)
+
+    // Health endpoint should still return 200 (exempt via rateLimit: false)
+    const healthRes = await app.inject({ method: 'GET', url: '/health/live' })
+    expect(healthRes.statusCode).toBe(200)
+  })
+
+  test('/health/ready still responds after exhausting global rate limit', async () => {
+    for (let i = 0; i < 100; i++) {
+      await app.inject({ method: 'GET', url: '/api/hello' })
+    }
+    const res = await app.inject({ method: 'GET', url: '/health/ready' })
+    expect([200, 503]).toContain(res.statusCode) // 503 is valid (not listening)
+  })
+
+  test('/health still responds after exhausting global rate limit', async () => {
+    for (let i = 0; i < 100; i++) {
+      await app.inject({ method: 'GET', url: '/api/hello' })
+    }
+    const res = await app.inject({ method: 'GET', url: '/health' })
+    expect(res.statusCode).toBe(200)
+  })
+})
