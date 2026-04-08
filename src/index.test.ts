@@ -130,6 +130,24 @@ test('GET /api/items/:id with non-numeric id returns 404 Problem Detail', async 
   expect(body.instance).toBe('/api/items/abc')
 })
 
+test('GET /api/items/:id with negative id returns 404 Problem Detail', async () => {
+  const response = await app.inject({ method: 'GET', url: '/api/items/-1' })
+  expect(response.statusCode).toBe(404)
+  expect(response.headers['content-type']).toContain('application/problem+json')
+  const body = response.json()
+  expect(body.status).toBe(404)
+  expect(body.instance).toBe('/api/items/-1')
+})
+
+test('GET /api/items/:id with float string truncates to integer and returns item', async () => {
+  // parseInt('2.9', 10) === 2; documents the truncation behavior
+  const response = await app.inject({ method: 'GET', url: '/api/items/2.9' })
+  // parseInt truncates, result is a valid positive id
+  expect(response.statusCode).toBe(200)
+  const body = response.json()
+  expect(body.item_id).toBe(2)
+})
+
 test('GET /api/items/:id with id=0 returns 404 Problem Detail', async () => {
   const response = await app.inject({ method: 'GET', url: '/api/items/0' })
   expect(response.statusCode).toBe(404)
