@@ -1,3 +1,4 @@
+// v1.0.0
 import { buildApp } from './app.js'
 import { config } from './config.js'
 
