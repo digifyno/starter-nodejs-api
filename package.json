@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
+    "prebuild": "node -e \"process.exit(require('fs').existsSync('./node_modules/.bin/tsc') ? 0 : 1)\" || (echo 'ERROR: devDependencies not installed. Run: npm install (ensure .npmrc include=dev is set)' && exit 1)",
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "vitest run",
