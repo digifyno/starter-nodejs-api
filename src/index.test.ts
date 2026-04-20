@@ -248,4 +248,15 @@ describe('CORS', () => {
     expect([200, 204]).toContain(res.statusCode)
     await devApp.close()
   })
+
+  test('non-production: Access-Control-Allow-Credentials header is not present', async () => {
+    const devApp = await buildApp({ nodeEnv: 'development' })
+    const res = await devApp.inject({
+      method: 'GET',
+      url: '/health/live',
+      headers: { Origin: 'http://attacker.example.com' }
+    })
+    expect(res.headers['access-control-allow-credentials']).toBeUndefined()
+    await devApp.close()
+  })
 })

@@ -48,9 +48,11 @@ export async function buildApp(options?: BuildOptions): Promise<FastifyInstance>
   await fastify.register(helmet)
   await fastify.register(rateLimit, { max: 100, timeWindow: '1 minute' })
 
+  // credentials: true must only be set when origin is a specific allowlist, not a wildcard/reflect-all.
+  // https://fetch.spec.whatwg.org/#cors-protocol-and-credentials
   await fastify.register(cors, {
     origin: (options?.nodeEnv ?? config.NODE_ENV) === 'production' ? false : true,
-    credentials: true,
+    credentials: false,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   })
 
