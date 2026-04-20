@@ -13,7 +13,7 @@ afterAll(async () => {
 })
 
 describe('Helmet security headers', () => {
-  const routes = ['/health', '/health/live', '/v1/status']
+  const routes = ['/health', '/health/live', '/v1/status', '/api/hello', '/']
 
   test.each(routes)('GET %s sets X-Content-Type-Options: nosniff', async (url) => {
     const res = await app.inject({ method: 'GET', url })
