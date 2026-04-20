@@ -163,6 +163,16 @@ test.each(['/', '/health', '/health/live', '/health/ready', '/v1/status'])(
   }
 )
 
+test('GET /v1/items with Accept-Encoding: gzip returns gzip-encoded response', async () => {
+  // limit=50 ensures payload exceeds the 1024-byte compression threshold
+  const res = await app.inject({
+    method: 'GET',
+    url: '/v1/items?limit=50',
+    headers: { 'accept-encoding': 'gzip' }
+  })
+  expect(res.statusCode).toBe(200)
+  expect(res.headers['content-encoding']).toBe('gzip')
+})
 
 test('GET / serves landing page with 200', async () => {
   const response = await app.inject({ method: 'GET', url: '/' })
