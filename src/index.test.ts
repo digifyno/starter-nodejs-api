@@ -91,14 +91,27 @@ test('GET /api/items/:id with negative id returns 404 Problem Detail', async () 
   expect(body.status).toBe(404)
 })
 
-test('X-Request-ID header is echoed back when provided', async () => {
+test('X-Request-ID: valid UUID v4 is echoed back', async () => {
+  const validUUID = '550e8400-e29b-4d00-a456-426614174000'
+  const response = await app.inject({
+    method: 'GET',
+    url: '/health',
+    headers: { 'x-request-id': validUUID }
+  })
+  expect(response.statusCode).toBe(200)
+  expect(response.headers['x-request-id']).toBe(validUUID)
+})
+
+test('X-Request-ID: non-UUID value is rejected; a fresh UUID is generated', async () => {
   const response = await app.inject({
     method: 'GET',
     url: '/health',
     headers: { 'x-request-id': 'test-123' }
   })
   expect(response.statusCode).toBe(200)
-  expect(response.headers['x-request-id']).toBe('test-123')
+  const reqId = response.headers['x-request-id']
+  expect(reqId).not.toBe('test-123')
+  expect(reqId).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)
 })
 
 test('X-Request-ID is generated when not provided', async () => {

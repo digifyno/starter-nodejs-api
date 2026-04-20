@@ -27,9 +27,15 @@ export async function buildApp(options?: BuildOptions): Promise<FastifyInstance>
   const htmlPath = join(__dirname, '../dist/index.html')
   const indexHtml = existsSync(htmlPath) ? readFileSync(htmlPath, 'utf-8') : null
 
+  const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
   const fastify = Fastify({
     logger: true,
-    genReqId: (req) => (req.headers['x-request-id'] as string) || randomUUID(),
+    genReqId: (req) => {
+      const id = req.headers['x-request-id']
+      if (typeof id === 'string' && UUID_REGEX.test(id)) return id
+      return randomUUID()
+    },
     ajv: {
       customOptions: {
         // Reject requests with extra body fields rather than silently stripping them.
