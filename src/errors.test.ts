@@ -50,6 +50,22 @@ describe('Error handler – RFC 9457 Problem Details', () => {
     expect(body).not.toHaveProperty('stack')
   })
 
+  test('returns 500 (not 401) for unhandled 401 error — documents current fallback behavior', async () => {
+    const testApp = await buildApp()
+    testApp.get('/test-401', async () => {
+      const err = new Error('Unauthorized') as Error & { statusCode: number }
+      err.statusCode = 401
+      throw err
+    })
+    const res = await testApp.inject({ method: 'GET', url: '/test-401' })
+    // Current behavior: error handler maps non-400/404/429/413 to 500
+    expect(res.statusCode).toBe(500)
+    const body = res.json()
+    expect(body.type).toBeDefined()
+    expect(body).not.toHaveProperty('stack')
+    await testApp.close()
+  })
+
   test('returns 500 JSON without stack trace for unhandled errors', async () => {
     // Register a throw route before the first inject (which triggers ready())
     const throwApp = await buildApp()

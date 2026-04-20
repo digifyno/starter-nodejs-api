@@ -75,6 +75,22 @@ test('GET /api/items/:id returns item by id', async () => {
   expect(body.price).toBe(99.99)
 })
 
+test('GET /api/items/:id with non-numeric id returns 404 Problem Detail', async () => {
+  const response = await app.inject({ method: 'GET', url: '/api/items/abc' })
+  expect(response.statusCode).toBe(404)
+  expect(response.headers['content-type']).toContain('application/problem+json')
+  const body = response.json()
+  expect(body.status).toBe(404)
+  expect(body.instance).toBe('/api/items/abc')
+})
+
+test('GET /api/items/:id with negative id returns 404 Problem Detail', async () => {
+  const response = await app.inject({ method: 'GET', url: '/api/items/-1' })
+  expect(response.statusCode).toBe(404)
+  const body = response.json()
+  expect(body.status).toBe(404)
+})
+
 test('X-Request-ID header is echoed back when provided', async () => {
   const response = await app.inject({
     method: 'GET',
