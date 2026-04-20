@@ -191,6 +191,15 @@ test('GET /docs/json returns valid OpenAPI spec', async () => {
   expect(spec.paths['/v1/status']).toBeDefined()
 })
 
+test('POST /api/items with extra fields returns 400 (mass assignment prevention)', async () => {
+  const response = await app.inject({
+    method: 'POST',
+    url: '/api/items',
+    payload: { name: 'Widget', price: 9.99, role: 'admin' }
+  })
+  expect(response.statusCode).toBe(400)
+})
+
 test('POST with oversized body returns 413', async () => {
   const largePayload = { name: 'x'.repeat(2 * 1024 * 1024), price: 1 }
   const response = await app.inject({

@@ -29,7 +29,14 @@ export async function buildApp(options?: BuildOptions): Promise<FastifyInstance>
 
   const fastify = Fastify({
     logger: true,
-    genReqId: (req) => (req.headers['x-request-id'] as string) || randomUUID()
+    genReqId: (req) => (req.headers['x-request-id'] as string) || randomUUID(),
+    ajv: {
+      customOptions: {
+        // Reject requests with extra body fields rather than silently stripping them.
+        // Schemas that declare additionalProperties: false will return 400 on unknown keys.
+        removeAdditional: false
+      }
+    }
   })
 
   await fastify.register(helmet)

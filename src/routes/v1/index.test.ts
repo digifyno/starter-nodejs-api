@@ -126,6 +126,15 @@ describe('POST /v1/items', () => {
     expect(response.statusCode).toBe(400)
   })
 
+  test('returns 400 when extra fields are present (mass assignment prevention)', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/v1/items',
+      payload: { name: 'Widget', price: 9.99, role: 'admin' }
+    })
+    expect(response.statusCode).toBe(400)
+  })
+
 })
 
 describe('POST /v1/items rate limiting', () => {

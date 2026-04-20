@@ -21,11 +21,12 @@ const apiRoutes: FastifyPluginAsync = async (fastify) => {
       tags: ['items'],
       body: {
         type: 'object',
+        additionalProperties: false,
         required: ['name', 'price'],
         properties: {
-          name: { type: 'string' },
-          description: { type: 'string' },
-          price: { type: 'number' }
+          name: { type: 'string', maxLength: 255 },
+          description: { type: 'string', maxLength: 1000 },
+          price: { type: 'number', minimum: 0 }
         }
       }
     }

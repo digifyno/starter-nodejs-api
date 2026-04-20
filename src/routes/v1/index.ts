@@ -65,10 +65,11 @@ const v1Routes: FastifyPluginAsync = async (fastify) => {
       tags: ['v1'],
       body: {
         type: 'object',
+        additionalProperties: false,
         required: ['name', 'price'],
         properties: {
-          name: { type: 'string' },
-          price: { type: 'number' }
+          name: { type: 'string', maxLength: 255 },
+          price: { type: 'number', minimum: 0 }
         }
       },
       response: {
