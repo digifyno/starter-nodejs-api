@@ -48,3 +48,24 @@ describe('Rate limiting', () => {
     expect(response!.statusCode).toBe(429)
   })
 })
+
+describe('POST /api/items rate limiting', () => {
+  let app: FastifyInstance
+
+  beforeEach(async () => { app = await buildApp() })
+  afterEach(async () => { await app.close() })
+
+  test('returns 429 after exceeding 30 req/min limit', async () => {
+    let response
+    for (let i = 0; i < 31; i++) {
+      response = await app.inject({
+        method: 'POST',
+        url: '/api/items',
+        payload: { name: 'test', price: 1 },
+      })
+    }
+    expect(response!.statusCode).toBe(429)
+    expect(response!.headers['x-ratelimit-limit']).toBeDefined()
+    expect(response!.headers['retry-after']).toBeDefined()
+  })
+})
