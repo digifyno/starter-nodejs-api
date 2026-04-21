@@ -55,11 +55,22 @@ export function encodeCursor(value: Record<string, unknown>): string {
 
 /**
  * Decodes a cursor produced by encodeCursor back to its original object.
+ * Pass a `validate` callback to reject payloads with unexpected shapes (throws 400).
  */
-export function decodeCursor(cursor: string): Record<string, unknown> {
+export function decodeCursor(
+  cursor: string,
+  validate?: (raw: Record<string, unknown>) => boolean
+): Record<string, unknown> {
   try {
-    return JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'))
-  } catch {
+    const parsed = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'))
+    if (validate && !validate(parsed)) {
+      const err = new Error('Invalid cursor: unexpected payload shape') as Error & { statusCode: number }
+      err.statusCode = 400
+      throw err
+    }
+    return parsed
+  } catch (e) {
+    if ((e as { statusCode?: number }).statusCode === 400) throw e
     const err = new Error('Invalid cursor: malformed or corrupted pagination token') as Error & { statusCode: number }
     err.statusCode = 400
     throw err

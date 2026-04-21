@@ -83,6 +83,43 @@ describe('paginationQuerySchema', () => {
   })
 })
 
+describe('decodeCursor with validator', () => {
+  const isNumericId = (raw: Record<string, unknown>) => typeof raw.id === 'number' && Number.isFinite(raw.id)
+
+  test('accepts a valid cursor when validator passes', () => {
+    const cursor = encodeCursor({ id: 42 })
+    expect(decodeCursor(cursor, isNumericId)).toEqual({ id: 42 })
+  })
+
+  test('throws 400 when id is null', () => {
+    const cursor = encodeCursor({ id: null })
+    const err = (() => { try { decodeCursor(cursor, isNumericId) } catch (e) { return e } })() as Error & { statusCode: number }
+    expect(err).toBeInstanceOf(Error)
+    expect(err.statusCode).toBe(400)
+    expect(err.message).toContain('unexpected payload shape')
+  })
+
+  test('throws 400 when id is a string', () => {
+    const cursor = encodeCursor({ id: 'xss' })
+    const err = (() => { try { decodeCursor(cursor, isNumericId) } catch (e) { return e } })() as Error & { statusCode: number }
+    expect(err).toBeInstanceOf(Error)
+    expect(err.statusCode).toBe(400)
+    expect(err.message).toContain('unexpected payload shape')
+  })
+
+  test('throws 400 when id is Infinity', () => {
+    // JSON.stringify coerces Infinity to null, so encode manually
+    const cursor = Buffer.from(JSON.stringify({ id: null })).toString('base64url')
+    const err = (() => { try { decodeCursor(cursor, isNumericId) } catch (e) { return e } })() as Error & { statusCode: number }
+    expect(err.statusCode).toBe(400)
+  })
+
+  test('without validator, still decodes payloads with null id', () => {
+    const cursor = encodeCursor({ id: null })
+    expect(decodeCursor(cursor)).toEqual({ id: null })
+  })
+})
+
 describe('pagination edge cases', () => {
   test('decodeCursor throws 400 for empty string', () => {
     const err = (() => { try { decodeCursor('') } catch (e) { return e } })() as Error & { statusCode: number }

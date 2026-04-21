@@ -44,7 +44,7 @@ const v1Routes: FastifyPluginAsync = async (fastify) => {
     }
   }, async (request) => {
     const { limit = 20, cursor } = request.query
-    const after = cursor ? decodeCursor(cursor) : null
+    const after = cursor ? decodeCursor(cursor, (raw) => typeof raw.id === 'number' && Number.isFinite(raw.id)) : null
     const allItems = Array.from({ length: 50 }, (_, i) => ({
       id: i + 1,
       name: `Item ${i + 1}`,
