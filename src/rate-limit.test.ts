@@ -69,3 +69,21 @@ describe('POST /api/items rate limiting', () => {
     expect(response!.headers['retry-after']).toBeDefined()
   })
 })
+
+describe('Health probe rate-limit exemption', () => {
+  let app: FastifyInstance
+
+  beforeEach(async () => { app = await buildApp() })
+  afterEach(async () => { await app.close() })
+
+  test.each(['/health', '/health/live', '/health/ready'])(
+    '%s returns 200 after global rate limit is exhausted',
+    async (url) => {
+      for (let i = 0; i < 100; i++) {
+        await app.inject({ method: 'GET', url: '/api/hello' })
+      }
+      const res = await app.inject({ method: 'GET', url })
+      expect(res.statusCode).toBe(200)
+    }
+  )
+})
