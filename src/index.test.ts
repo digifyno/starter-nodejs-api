@@ -223,6 +223,49 @@ test('POST with oversized body returns 413', async () => {
   expect(response.statusCode).toBe(413)
 })
 
+describe('POST /api/items input boundaries', () => {
+  test('price: 0 is accepted (minimum boundary)', async () => {
+    const res = await app.inject({
+      method: 'POST', url: '/api/items',
+      payload: { name: 'Widget', price: 0 }
+    })
+    expect(res.statusCode).toBe(200)
+  })
+
+  test('price: -0.01 is rejected with 400 (below minimum)', async () => {
+    const res = await app.inject({
+      method: 'POST', url: '/api/items',
+      payload: { name: 'Widget', price: -0.01 }
+    })
+    expect(res.statusCode).toBe(400)
+  })
+
+  test('name at maxLength (255 chars) is accepted', async () => {
+    const res = await app.inject({
+      method: 'POST', url: '/api/items',
+      payload: { name: 'a'.repeat(255), price: 1 }
+    })
+    expect(res.statusCode).toBe(200)
+  })
+
+  test('name exceeding maxLength (256 chars) is rejected with 400', async () => {
+    const res = await app.inject({
+      method: 'POST', url: '/api/items',
+      payload: { name: 'a'.repeat(256), price: 1 }
+    })
+    expect(res.statusCode).toBe(400)
+  })
+
+  test('optional description field is accepted and echoed back', async () => {
+    const res = await app.inject({
+      method: 'POST', url: '/api/items',
+      payload: { name: 'Widget', price: 9.99, description: 'A test widget' }
+    })
+    expect(res.statusCode).toBe(200)
+    expect(res.json().item.description).toBe('A test widget')
+  })
+})
+
 describe('CORS', () => {
   test('production mode: CORS headers absent on cross-origin request', async () => {
     const prodApp = await buildApp({ nodeEnv: 'production' })
