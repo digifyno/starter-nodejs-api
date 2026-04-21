@@ -29,10 +29,12 @@ describe('Rate limiting', () => {
     expect(response!.headers['x-ratelimit-remaining']).toBe('0')
     expect(response!.headers['retry-after']).toBeDefined()
 
+    expect(response!.headers['content-type']).toContain('application/problem+json')
     const body = response!.json()
-    expect(body).toBeTruthy()
-    // @fastify/rate-limit with RFC 9457 Problem Details returns { type, title, status, detail, instance }
-    expect(body.title || body.detail || body.error || body.message).toBeTruthy()
+    expect(body).toHaveProperty('type')
+    expect(body).toHaveProperty('title')
+    expect(body).toHaveProperty('status', 429)
+    expect(typeof body.detail).toBe('string')
   })
 
   test('GET /v1/status returns 429 after exceeding global 100 req/min limit', async () => {
@@ -67,6 +69,12 @@ describe('POST /api/items rate limiting', () => {
     expect(response!.statusCode).toBe(429)
     expect(response!.headers['x-ratelimit-limit']).toBeDefined()
     expect(response!.headers['retry-after']).toBeDefined()
+    expect(response!.headers['content-type']).toContain('application/problem+json')
+    const body = response!.json()
+    expect(body).toHaveProperty('type')
+    expect(body).toHaveProperty('title')
+    expect(body).toHaveProperty('status', 429)
+    expect(typeof body.detail).toBe('string')
   })
 })
 
