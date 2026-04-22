@@ -13,6 +13,12 @@ export const envSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'production', 'test'])
     .default('development'),
+  CURSOR_SECRET: z.string().min(32, { message: 'CURSOR_SECRET must be at least 32 characters' }).default(() => {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('CURSOR_SECRET must be explicitly set in production')
+    }
+    return 'dev-cursor-secret-replace-in-production-32ch'
+  }),
 })
 
 export type EnvConfig = z.infer<typeof envSchema>
