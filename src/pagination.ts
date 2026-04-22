@@ -9,13 +9,15 @@
  *     schema: { querystring: paginationQuerySchema, ... }
  *   }, async (request) => {
  *     const limit = request.query.limit ?? 20
- *     const after = request.query.cursor ? decodeCursor(request.query.cursor) : null
+ *     const after = request.query.cursor ? decodeCursor(request.query.cursor, config.CURSOR_SECRET) : null
  *     // e.g.: const rows = await db.query('SELECT * FROM items WHERE id > $1 ORDER BY id LIMIT $2', [after?.id ?? 0, limit + 1])
  *     const items = rows.slice(0, limit)
- *     const nextCursor = rows.length > limit ? encodeCursor({ id: items[items.length - 1].id }) : null
+ *     const nextCursor = rows.length > limit ? encodeCursor({ id: items[items.length - 1].id }, config.CURSOR_SECRET) : null
  *     return paginatedResponse(items, nextCursor)
  *   })
  */
+
+import { createHmac, timingSafeEqual } from 'crypto'
 
 export const paginationQuerySchema = {
   type: 'object',
@@ -47,22 +49,41 @@ export function paginatedResponse<T>(items: T[], nextCursor: string | null) {
 }
 
 /**
- * Encodes a cursor value as a base64url JSON string, keeping internals opaque to clients.
+ * Encodes a cursor value as a signed base64url token (payload.signature) to prevent tampering.
  */
-export function encodeCursor(value: Record<string, unknown>): string {
-  return Buffer.from(JSON.stringify(value)).toString('base64url')
+export function encodeCursor(value: Record<string, unknown>, secret: string): string {
+  const payload = Buffer.from(JSON.stringify(value)).toString('base64url')
+  const sig = createHmac('sha256', secret).update(payload).digest('base64url')
+  return `${payload}.${sig}`
 }
 
 /**
- * Decodes a cursor produced by encodeCursor back to its original object.
+ * Decodes and verifies a cursor produced by encodeCursor. Throws 400 on invalid or tampered cursors.
  * Pass a `validate` callback to reject payloads with unexpected shapes (throws 400).
  */
 export function decodeCursor(
   cursor: string,
+  secret: string,
   validate?: (raw: Record<string, unknown>) => boolean
 ): Record<string, unknown> {
+  const dotIndex = cursor.lastIndexOf('.')
+  if (dotIndex === -1) {
+    const err = new Error('Invalid cursor: missing signature') as Error & { statusCode: number }
+    err.statusCode = 400
+    throw err
+  }
+  const payload = cursor.slice(0, dotIndex)
+  const sig = cursor.slice(dotIndex + 1)
+  const expected = createHmac('sha256', secret).update(payload).digest('base64url')
+  const sigBuf = Buffer.from(sig)
+  const expBuf = Buffer.from(expected)
+  if (sigBuf.length !== expBuf.length || !timingSafeEqual(sigBuf, expBuf)) {
+    const err = new Error('Invalid cursor: signature mismatch') as Error & { statusCode: number }
+    err.statusCode = 400
+    throw err
+  }
   try {
-    const parsed = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'))
+    const parsed = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'))
     if (validate && !validate(parsed)) {
       const err = new Error('Invalid cursor: unexpected payload shape') as Error & { statusCode: number }
       err.statusCode = 400

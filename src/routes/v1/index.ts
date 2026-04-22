@@ -1,4 +1,5 @@
 import { FastifyPluginAsync } from 'fastify'
+import { config } from '../../config.js'
 import { decodeCursor, encodeCursor, paginatedResponse, paginationQuerySchema } from '../../pagination.js'
 
 // When /v2 is released, add to onSend hook:
@@ -44,7 +45,7 @@ const v1Routes: FastifyPluginAsync = async (fastify) => {
     }
   }, async (request) => {
     const { limit = 20, cursor } = request.query
-    const after = cursor ? decodeCursor(cursor, (raw) => typeof raw.id === 'number' && Number.isFinite(raw.id)) : null
+    const after = cursor ? decodeCursor(cursor, config.CURSOR_SECRET, (raw) => typeof raw.id === 'number' && Number.isFinite(raw.id)) : null
     const allItems = Array.from({ length: 50 }, (_, i) => ({
       id: i + 1,
       name: `Item ${i + 1}`,
@@ -53,7 +54,7 @@ const v1Routes: FastifyPluginAsync = async (fastify) => {
     const startId = (after?.id as number) ?? 0
     const filtered = allItems.filter(item => item.id > startId)
     const page = filtered.slice(0, limit)
-    const nextCursor = filtered.length > limit ? encodeCursor({ id: page[page.length - 1].id }) : null
+    const nextCursor = filtered.length > limit ? encodeCursor({ id: page[page.length - 1].id }, config.CURSOR_SECRET) : null
     return paginatedResponse(page, nextCursor)
   })
 
