@@ -61,3 +61,35 @@ describe('envSchema', () => {
     expect(result.success).toBe(false)
   })
 })
+
+describe('envSchema — CURSOR_SECRET', () => {
+  test('rejects secrets shorter than 32 characters', () => {
+    const result = envSchema.safeParse({ CURSOR_SECRET: 'tooshort' })
+    expect(result.success).toBe(false)
+  })
+
+  test('accepts a secret of exactly 32 characters', () => {
+    const secret = 'a'.repeat(32)
+    const result = envSchema.safeParse({ CURSOR_SECRET: secret })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.CURSOR_SECRET).toBe(secret)
+    }
+  })
+
+  test('accepts a secret longer than 32 characters', () => {
+    const result = envSchema.safeParse({ CURSOR_SECRET: 'a'.repeat(64) })
+    expect(result.success).toBe(true)
+  })
+
+  test('uses dev default when CURSOR_SECRET is not supplied in non-production', () => {
+    // The production guard (process.env.NODE_ENV === 'production' → throw) runs inside the
+    // Zod default() callback and cannot be reliably tested via safeParse without mocking
+    // process.env.NODE_ENV at module load time — that case is intentionally omitted here.
+    const result = envSchema.safeParse({ NODE_ENV: 'development' })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.CURSOR_SECRET.startsWith('dev-cursor-secret')).toBe(true)
+    }
+  })
+})
