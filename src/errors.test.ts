@@ -1,6 +1,35 @@
 import { describe, test, expect, beforeAll, afterAll } from 'vitest'
 import type { FastifyInstance } from 'fastify'
 import { buildApp } from './app.js'
+import { createProblemDetail } from './errors.js'
+
+describe('createProblemDetail unit', () => {
+  test('full shape: all five keys present with correct values', () => {
+    const result = createProblemDetail(404, 'Not Found', 'Resource missing', '/requests/1')
+    expect(result).toEqual({
+      type: 'about:blank',
+      title: 'Not Found',
+      status: 404,
+      detail: 'Resource missing',
+      instance: '/requests/1',
+    })
+  })
+
+  test('no instance: result does not have instance key', () => {
+    const result = createProblemDetail(400, 'Bad Request', 'Invalid input')
+    expect(result).not.toHaveProperty('instance')
+  })
+
+  test('type is always about:blank for multiple status codes', () => {
+    expect(createProblemDetail(400, 'Bad Request', 'x').type).toBe('about:blank')
+    expect(createProblemDetail(404, 'Not Found', 'x').type).toBe('about:blank')
+    expect(createProblemDetail(500, 'Internal Server Error', 'x').type).toBe('about:blank')
+  })
+
+  test('statusCode stored as-is in status field', () => {
+    expect(createProblemDetail(422, 'Unprocessable Entity', 'x').status).toBe(422)
+  })
+})
 
 describe('Error handler – RFC 9457 Problem Details', () => {
   let app: FastifyInstance
