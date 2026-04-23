@@ -187,6 +187,10 @@ test('GET /v1/items with Accept-Encoding: gzip returns gzip-encoded response', a
   expect(res.headers['content-encoding']).toBe('gzip')
 })
 
+// GET / serves dist/index.html when the file exists (HTML path is exercised here).
+// The JSON fallback ({ message, health, docs }) executes only when dist/index.html is
+// absent; that branch depends on config.NODE_ENV (not the buildApp nodeEnv option)
+// for the `docs` field, so it is not separately testable without filesystem mocking.
 test('GET / serves landing page with 200', async () => {
   const response = await app.inject({ method: 'GET', url: '/' })
   expect(response.statusCode).toBe(200)
@@ -301,5 +305,38 @@ describe('CORS', () => {
     })
     expect(res.headers['access-control-allow-credentials']).toBeUndefined()
     await devApp.close()
+  })
+})
+
+describe('X-Request-ID on all response types', () => {
+  const UUID_V4_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
+  test('404 response includes X-Request-ID matching UUID v4', async () => {
+    const response = await app.inject({ method: 'GET', url: '/no-such-route' })
+    expect(response.statusCode).toBe(404)
+    expect(response.headers['x-request-id']).toBeDefined()
+    expect(response.headers['x-request-id']).toMatch(UUID_V4_RE)
+  })
+
+  test('400 response includes X-Request-ID', async () => {
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/items',
+      payload: { name: 'Widget' } // missing required 'price'
+    })
+    expect(response.statusCode).toBe(400)
+    expect(response.headers['x-request-id']).toBeDefined()
+  })
+
+  test('429 response includes X-Request-ID', async () => {
+    const rateLimitApp = await buildApp()
+    const limit = 30
+    for (let i = 0; i < limit; i++) {
+      await rateLimitApp.inject({ method: 'POST', url: '/v1/items', payload: { name: 'x', price: 1 } })
+    }
+    const response = await rateLimitApp.inject({ method: 'POST', url: '/v1/items', payload: { name: 'x', price: 1 } })
+    expect(response.statusCode).toBe(429)
+    expect(response.headers['x-request-id']).toBeDefined()
+    await rateLimitApp.close()
   })
 })
