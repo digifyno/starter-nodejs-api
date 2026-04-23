@@ -187,6 +187,10 @@ test('GET /v1/items with Accept-Encoding: gzip returns gzip-encoded response', a
   expect(res.headers['content-encoding']).toBe('gzip')
 })
 
+// GET / serves dist/index.html when the file exists (HTML path is exercised here).
+// The JSON fallback ({ message, health, docs }) executes only when dist/index.html is
+// absent; that branch depends on config.NODE_ENV (not the buildApp nodeEnv option)
+// for the `docs` field, so it is not separately testable without filesystem mocking.
 test('GET / serves landing page with 200', async () => {
   const response = await app.inject({ method: 'GET', url: '/' })
   expect(response.statusCode).toBe(200)
