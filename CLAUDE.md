@@ -1,3 +1,9 @@
+<!-- rsi-worker-metadata
+  workerId=14aec585-c29d-47dc-a14d-034a91371eff
+  productId=963c1e56-5a46-49f0-83ca-3acff32c4918
+  scopeConfigHash=a10ec3cb3731dd03
+  generatedAt=2026-04-24T22:00:45.647Z
+-->
 # Node.js Fastify Starter - Claude Development Guide
 
 ## Stack
