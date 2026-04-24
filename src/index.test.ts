@@ -70,7 +70,7 @@ test('GET /api/items/:id returns item by id', async () => {
   const response = await app.inject({ method: 'GET', url: '/api/items/42' })
   expect(response.statusCode).toBe(200)
   const body = response.json()
-  expect(body.item_id).toBe(42)
+  expect(body.itemId).toBe(42)
   expect(body.name).toBe('Item 42')
   expect(body.price).toBe(99.99)
 })

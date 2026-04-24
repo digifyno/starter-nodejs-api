@@ -51,7 +51,7 @@ const apiRoutes: FastifyPluginAsync = async (fastify) => {
         .send(createProblemDetail(404, 'Not Found', `Item with id '${id}' was not found.`, request.url))
     }
 
-    return { item_id: numId, name: `Item ${id}`, price: 99.99 }
+    return { itemId: numId, name: `Item ${id}`, price: 99.99 }
   })
 }
 
