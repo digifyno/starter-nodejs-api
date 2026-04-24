@@ -1,6 +1,7 @@
 import { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest'
 import type { FastifyInstance } from 'fastify'
 import { buildApp } from '../../app.js'
+import { WRITE_RATE_LIMIT } from '../../schemas.js'
 
 let app: FastifyInstance
 
@@ -191,7 +192,7 @@ describe('POST /v1/items rate limiting', () => {
   })
 
   test('returns 429 after exceeding the 30 req/min rate limit', async () => {
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < WRITE_RATE_LIMIT.max; i++) {
       await rateLimitApp.inject({
         method: 'POST',
         url: '/v1/items',
