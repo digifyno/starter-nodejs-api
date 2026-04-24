@@ -39,7 +39,7 @@ const apiRoutes = async (fastify) => {
                 .header('Content-Type', 'application/problem+json')
                 .send(createProblemDetail(404, 'Not Found', `Item with id '${id}' was not found.`, request.url));
         }
-        return { item_id: numId, name: `Item ${id}`, price: 99.99 };
+        return { itemId: numId, name: `Item ${id}`, price: 99.99 };
     });
 };
 export default apiRoutes;

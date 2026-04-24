@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify'
 import { createProblemDetail } from '../errors.js'
+import { baseItemBodySchema, WRITE_RATE_LIMIT } from '../schemas.js'
 
 interface Item {
   name: string
@@ -15,18 +16,15 @@ const apiRoutes: FastifyPluginAsync = async (fastify) => {
   })
 
   fastify.post<{ Body: Item }>('/items', {
-    config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
+    config: { rateLimit: WRITE_RATE_LIMIT },
     schema: {
       summary: 'Create an item',
       tags: ['items'],
       body: {
-        type: 'object',
-        additionalProperties: false,
-        required: ['name', 'price'],
+        ...baseItemBodySchema,
         properties: {
-          name: { type: 'string', maxLength: 255 },
-          description: { type: 'string', maxLength: 1000 },
-          price: { type: 'number', minimum: 0 }
+          ...baseItemBodySchema.properties,
+          description: { type: 'string', maxLength: 1000 }
         }
       }
     }
