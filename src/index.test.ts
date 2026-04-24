@@ -1,6 +1,7 @@
 import { describe, test, expect, beforeAll, afterAll } from 'vitest'
 import type { FastifyInstance } from 'fastify'
 import { buildApp } from './app.js'
+import { WRITE_RATE_LIMIT } from './schemas.js'
 
 let app: FastifyInstance
 
@@ -330,8 +331,7 @@ describe('X-Request-ID on all response types', () => {
 
   test('429 response includes X-Request-ID', async () => {
     const rateLimitApp = await buildApp()
-    const limit = 30
-    for (let i = 0; i < limit; i++) {
+    for (let i = 0; i < WRITE_RATE_LIMIT.max; i++) {
       await rateLimitApp.inject({ method: 'POST', url: '/v1/items', payload: { name: 'x', price: 1 } })
     }
     const response = await rateLimitApp.inject({ method: 'POST', url: '/v1/items', payload: { name: 'x', price: 1 } })

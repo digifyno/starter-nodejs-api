@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from 'fastify'
 import { config } from '../../config.js'
 import { decodeCursor, encodeCursor, paginatedResponse, paginationQuerySchema } from '../../pagination.js'
+import { baseItemBodySchema, WRITE_RATE_LIMIT } from '../../schemas.js'
 
 // When /v2 is released, add to onSend hook:
 // reply.header('Deprecation', 'true')
@@ -60,19 +61,11 @@ const v1Routes: FastifyPluginAsync = async (fastify) => {
 
   // POST routes that mutate state: enforced 30 req/min (tighter than global 100)
   fastify.post<{ Body: CreateItemBody }>('/items', {
-    config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
+    config: { rateLimit: WRITE_RATE_LIMIT },
     schema: {
       summary: 'Create a v1 item',
       tags: ['v1'],
-      body: {
-        type: 'object',
-        additionalProperties: false,
-        required: ['name', 'price'],
-        properties: {
-          name: { type: 'string', maxLength: 255 },
-          price: { type: 'number', minimum: 0 }
-        }
-      },
+      body: baseItemBodySchema,
       response: {
         200: {
           type: 'object',
