@@ -1,7 +1,6 @@
-import { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest'
+import { describe, test, expect, beforeAll, afterAll } from 'vitest'
 import type { FastifyInstance } from 'fastify'
 import { buildApp } from '../../app.js'
-import { WRITE_RATE_LIMIT } from '../../schemas.js'
 
 let app: FastifyInstance
 
@@ -180,38 +179,4 @@ describe('POST /v1/items input boundaries', () => {
   })
 })
 
-describe('POST /v1/items rate limiting', () => {
-  let rateLimitApp: FastifyInstance
-
-  beforeEach(async () => {
-    rateLimitApp = await buildApp()
-  })
-
-  afterEach(async () => {
-    await rateLimitApp.close()
-  })
-
-  test('returns 429 after exceeding the 30 req/min rate limit', async () => {
-    for (let i = 0; i < WRITE_RATE_LIMIT.max; i++) {
-      await rateLimitApp.inject({
-        method: 'POST',
-        url: '/v1/items',
-        payload: { name: 'test', price: 1 },
-      })
-    }
-    const response = await rateLimitApp.inject({
-      method: 'POST',
-      url: '/v1/items',
-      payload: { name: 'test', price: 1 },
-    })
-    expect(response.statusCode).toBe(429)
-    expect(response.headers['x-ratelimit-limit']).toBeDefined()
-    expect(response.headers['retry-after']).toBeDefined()
-    expect(response.headers['content-type']).toContain('application/problem+json')
-    const body = response.json()
-    expect(body).toHaveProperty('type')
-    expect(body).toHaveProperty('title')
-    expect(body).toHaveProperty('status', 429)
-    expect(typeof body.detail).toBe('string')
-  })
-})
+// POST /v1/items rate limiting covered in src/rate-limit.test.ts

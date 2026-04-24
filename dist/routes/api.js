@@ -1,4 +1,5 @@
 import { createProblemDetail } from '../errors.js';
+import { baseItemBodySchema, WRITE_RATE_LIMIT } from '../schemas.js';
 const apiRoutes = async (fastify) => {
     fastify.get('/hello', {
         schema: { summary: 'Hello endpoint', tags: ['api'] }
@@ -6,18 +7,15 @@ const apiRoutes = async (fastify) => {
         return { message: 'Hello from Fastify!' };
     });
     fastify.post('/items', {
-        config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
+        config: { rateLimit: WRITE_RATE_LIMIT },
         schema: {
             summary: 'Create an item',
             tags: ['items'],
             body: {
-                type: 'object',
-                additionalProperties: false,
-                required: ['name', 'price'],
+                ...baseItemBodySchema,
                 properties: {
-                    name: { type: 'string', maxLength: 255 },
-                    description: { type: 'string', maxLength: 1000 },
-                    price: { type: 'number', minimum: 0 }
+                    ...baseItemBodySchema.properties,
+                    description: { type: 'string', maxLength: 1000 }
                 }
             }
         }
