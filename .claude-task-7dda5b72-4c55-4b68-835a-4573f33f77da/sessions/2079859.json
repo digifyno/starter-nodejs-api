@@ -1,0 +1,1 @@
+{"pid":2079859,"sessionId":"1ab64c2a-5798-4832-8f3c-4f38adece0ce","cwd":"/home/rsi/rsi-worktrees/16886887","startedAt":1777108997542,"version":"2.1.116","peerProtocol":1,"kind":"interactive","entrypoint":"sdk-cli","name":"code:Fix unhandled promise rejection in SIGTERM/SIGINT","updatedAt":1777108997548}
