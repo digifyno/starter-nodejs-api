@@ -19,6 +19,12 @@
 
 import { createHmac, timingSafeEqual } from 'crypto'
 
+function httpError(statusCode: number, message: string): Error & { statusCode: number } {
+  const err = new Error(message) as Error & { statusCode: number }
+  err.statusCode = statusCode
+  return err
+}
+
 export const paginationQuerySchema = {
   type: 'object',
   properties: {
@@ -68,9 +74,7 @@ export function decodeCursor(
 ): Record<string, unknown> {
   const dotIndex = cursor.lastIndexOf('.')
   if (dotIndex === -1) {
-    const err = new Error('Invalid cursor: missing signature') as Error & { statusCode: number }
-    err.statusCode = 400
-    throw err
+    throw httpError(400, 'Invalid cursor: missing signature')
   }
   const payload = cursor.slice(0, dotIndex)
   const sig = cursor.slice(dotIndex + 1)
@@ -78,22 +82,16 @@ export function decodeCursor(
   const sigBuf = Buffer.from(sig)
   const expBuf = Buffer.from(expected)
   if (sigBuf.length !== expBuf.length || !timingSafeEqual(sigBuf, expBuf)) {
-    const err = new Error('Invalid cursor: signature mismatch') as Error & { statusCode: number }
-    err.statusCode = 400
-    throw err
+    throw httpError(400, 'Invalid cursor: signature mismatch')
   }
   try {
     const parsed = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'))
     if (validate && !validate(parsed)) {
-      const err = new Error('Invalid cursor: unexpected payload shape') as Error & { statusCode: number }
-      err.statusCode = 400
-      throw err
+      throw httpError(400, 'Invalid cursor: unexpected payload shape')
     }
     return parsed
   } catch (e) {
-    if ((e as { statusCode?: number }).statusCode === 400) throw e
-    const err = new Error('Invalid cursor: malformed or corrupted pagination token') as Error & { statusCode: number }
-    err.statusCode = 400
-    throw err
+    if (e instanceof Error && (e as Error & { statusCode?: number }).statusCode === 400) throw e
+    throw httpError(400, 'Invalid cursor: malformed or corrupted pagination token')
   }
 }
