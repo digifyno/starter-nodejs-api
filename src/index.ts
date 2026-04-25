@@ -22,8 +22,18 @@ const start = async () => {
     }
   }
 
-  process.once('SIGTERM', () => shutdown('SIGTERM'))
-  process.once('SIGINT', () => shutdown('SIGINT'))
+  process.once('SIGTERM', () => {
+    shutdown('SIGTERM').catch((err) => {
+      fastify.log.error(err, 'Shutdown failed')
+      process.exit(1)
+    })
+  })
+  process.once('SIGINT', () => {
+    shutdown('SIGINT').catch((err) => {
+      fastify.log.error(err, 'Shutdown failed')
+      process.exit(1)
+    })
+  })
 
   try {
     await fastify.listen({ port: config.PORT, host: config.HOST })
