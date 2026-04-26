@@ -76,20 +76,20 @@ test('GET /api/items/:id returns item by id', async () => {
   expect(body.price).toBe(99.99)
 })
 
-test('GET /api/items/:id with non-numeric id returns 404 Problem Detail', async () => {
+test('GET /api/items/:id with non-numeric id returns 400 Problem Detail', async () => {
   const response = await app.inject({ method: 'GET', url: '/api/items/abc' })
-  expect(response.statusCode).toBe(404)
+  expect(response.statusCode).toBe(400)
   expect(response.headers['content-type']).toContain('application/problem+json')
   const body = response.json()
-  expect(body.status).toBe(404)
+  expect(body.status).toBe(400)
   expect(body.instance).toBe('/api/items/abc')
 })
 
-test('GET /api/items/:id with negative id returns 404 Problem Detail', async () => {
+test('GET /api/items/:id with negative id returns 400 Problem Detail', async () => {
   const response = await app.inject({ method: 'GET', url: '/api/items/-1' })
-  expect(response.statusCode).toBe(404)
+  expect(response.statusCode).toBe(400)
   const body = response.json()
-  expect(body.status).toBe(404)
+  expect(body.status).toBe(400)
 })
 
 test('X-Request-ID: valid UUID v4 is echoed back', async () => {
@@ -141,14 +141,14 @@ test('POST /api/items with invalid body returns 400 Problem Detail', async () =>
   expect(body.detail.length).toBeGreaterThan(0)
 })
 
-test('GET /api/items/:id with id=0 returns 404 Problem Detail', async () => {
+test('GET /api/items/:id with id=0 returns 400 Problem Detail', async () => {
   const response = await app.inject({ method: 'GET', url: '/api/items/0' })
-  expect(response.statusCode).toBe(404)
+  expect(response.statusCode).toBe(400)
   expect(response.headers['content-type']).toContain('application/problem+json')
   const body = response.json()
   expect(body.type).toBe('about:blank')
-  expect(body.title).toBe('Not Found')
-  expect(body.status).toBe(404)
+  expect(body.title).toBe('Bad Request')
+  expect(body.status).toBe(400)
   expect(typeof body.detail).toBe('string')
   expect(body.instance).toBe('/api/items/0')
 })
