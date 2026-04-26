@@ -72,6 +72,50 @@ vitest.config.ts          # Test runner config
 | POST | `/v1/items` | Create a v1 item (30 req/min) |
 | GET | `/docs` | Swagger UI (dev/staging only) |
 
+## Pagination
+
+`GET /v1/items` uses cursor-based pagination. All paginated endpoints share the same query parameters, response envelope, and error behavior.
+
+### Query Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `limit` | integer | 20 | Number of items per page (1–100) |
+| `cursor` | string | — | Opaque cursor from the previous response's `pagination.nextCursor` |
+
+### Response Envelope
+
+```json
+{
+  "data": [...],
+  "pagination": {
+    "nextCursor": "<opaque-token>",
+    "hasMore": true
+  }
+}
+```
+
+`nextCursor` is `null` and `hasMore` is `false` when there are no more pages.
+
+### Usage Example
+
+```typescript
+// First page
+const res1 = await fetch('/v1/items?limit=20')
+const { data, pagination } = await res1.json()
+
+// Next page
+if (pagination.hasMore) {
+  const res2 = await fetch(`/v1/items?limit=20&cursor=${pagination.nextCursor}`)
+}
+```
+
+### Notes
+
+- Cursors are HMAC-signed — tampered or malformed cursors return `400 Bad Request` with [RFC 9457 Problem Details](https://www.rfc-editor.org/rfc/rfc9457) format.
+- The cursor is opaque; do not attempt to decode or construct it client-side.
+- The `CURSOR_SECRET` environment variable must be set to a string of at least 32 characters in production.
+
 ## Adding Endpoints
 
 Routes should include `schema.summary` and `schema.tags` to appear in Swagger UI. Apply rate-limit and compression overrides as appropriate:
