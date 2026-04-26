@@ -11,7 +11,7 @@ import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { randomUUID } from 'crypto'
 import { config } from './config.js'
-import { createProblemDetail, registerErrorHandlers } from './errors.js'
+import { registerErrorHandlers } from './errors.js'
 import healthRoutes from './routes/health.js'
 import apiRoutes from './routes/api.js'
 import v1Routes from './routes/v1/index.js'
@@ -54,31 +54,6 @@ async function registerPlugins(fastify: FastifyInstance, nodeEnv: string): Promi
   if (nodeEnv !== 'production') {
     await fastify.register(swaggerUi, { routePrefix: '/docs', baseDir: __dirname })
   }
-}
-
-function registerErrorHandlers(fastify: FastifyInstance): void {
-  fastify.setErrorHandler((error: FastifyError, request, reply) => {
-    const statusCode = error.statusCode ?? 500
-    const safeCode = statusCode >= 400 ? statusCode : 500
-    const title = STATUS_TITLES[safeCode] ?? 'Internal Server Error'
-    const detail = STATUS_DETAILS[safeCode] ?? (safeCode < 500 ? error.message : 'An unexpected error occurred.')
-
-    if (safeCode >= 500) {
-      request.log.error(error, 'Unhandled error')
-    }
-
-    reply
-      .header('Content-Type', 'application/problem+json')
-      .code(safeCode)
-      .send(createProblemDetail(safeCode, title, detail, request.url))
-  })
-
-  fastify.setNotFoundHandler((request, reply) => {
-    reply
-      .header('Content-Type', 'application/problem+json')
-      .code(404)
-      .send(createProblemDetail(404, 'Not Found', 'The requested resource was not found.', request.url))
-  })
 }
 
 export async function buildApp(options?: BuildOptions): Promise<FastifyInstance> {
