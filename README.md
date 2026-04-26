@@ -159,6 +159,7 @@ Copy `.env.example` to `.env`. All variables are validated by Zod at startup —
 PORT=3000
 HOST=0.0.0.0
 NODE_ENV=development
+CURSOR_SECRET=dev-cursor-secret-replace-in-production-32ch
 ```
 
 | Variable | Default | Values |
@@ -166,6 +167,7 @@ NODE_ENV=development
 | `PORT` | `3000` | 1–65535 |
 | `HOST` | `0.0.0.0` | any string |
 | `NODE_ENV` | `development` | `development`, `production`, `test` |
+| `CURSOR_SECRET` | _(dev default provided)_ | min 32 chars; **must be explicitly set in production** |
 
 Access validated config in code:
 
