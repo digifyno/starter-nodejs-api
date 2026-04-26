@@ -1,4 +1,3 @@
-import { createProblemDetail } from '../errors.js';
 import { baseItemBodySchema, WRITE_RATE_LIMIT } from '../schemas.js';
 const apiRoutes = async (fastify) => {
     fastify.get('/hello', {
@@ -26,18 +25,15 @@ const apiRoutes = async (fastify) => {
         schema: {
             summary: 'Get item by ID',
             tags: ['items'],
-            params: { type: 'object', properties: { id: { type: 'string' } } }
+            params: {
+                type: 'object',
+                required: ['id'],
+                properties: { id: { type: 'integer', minimum: 1 } }
+            }
         }
-    }, async (request, reply) => {
+    }, async (request) => {
         const { id } = request.params;
-        const numId = parseInt(id, 10);
-        if (isNaN(numId) || numId <= 0) {
-            return reply
-                .code(404)
-                .header('Content-Type', 'application/problem+json')
-                .send(createProblemDetail(404, 'Not Found', `Item with id '${id}' was not found.`, request.url));
-        }
-        return { itemId: numId, name: `Item ${id}`, price: 99.99 };
+        return { itemId: id, name: `Item ${id}`, price: 99.99 };
     });
 };
 export default apiRoutes;
