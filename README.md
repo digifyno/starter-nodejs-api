@@ -44,12 +44,20 @@ src/
 ├── config.ts             # Environment variable validation (zod)
 ├── errors.ts             # RFC 9457 Problem Details error helpers
 ├── pagination.ts         # Cursor-based pagination utilities
+├── schemas.ts            # Shared JSON schemas and rate-limit constants
 ├── index.test.ts         # Route integration tests
 ├── config.test.ts        # Env schema unit tests
+├── errors.test.ts        # Error handler unit + integration tests
 ├── pagination.test.ts    # Pagination utility tests
+├── rate-limit.test.ts    # Rate-limit integration tests
+├── security.test.ts      # Helmet security header tests
+├── swagger.test.ts       # Swagger UI production gate tests
 └── routes/
+    ├── health.ts         # Health probe routes (/health, /health/live, /health/ready)
+    ├── api.ts            # /api routes (hello, items)
     └── v1/
-        └── index.ts      # v1 API routes
+        ├── index.ts      # v1 routes (/v1/status, /v1/items)
+        └── index.test.ts # v1 route integration tests
 dist/
 └── index.html            # Landing page served at GET /
 tsconfig.json             # TypeScript config (NodeNext ESM)
