@@ -66,23 +66,25 @@ vitest.config.ts          # Test runner config
 
 ## API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/` | Landing page (HTML) or JSON discovery |
-| GET | `/health` | Health check (legacy) |
-| GET | `/health/live` | Liveness probe |
-| GET | `/health/ready` | Readiness probe (503 until server binds) |
-| GET | `/api/hello` | Sample hello endpoint |
-| POST | `/api/items` | Create an item (30 req/min) |
-| GET | `/api/items/:id` | Get item by ID |
-| GET | `/v1/status` | API v1 status |
-| GET | `/v1/items` | List items (cursor-based pagination) |
-| POST | `/v1/items` | Create a v1 item (30 req/min) |
-| GET | `/docs` | Swagger UI (non-production only) |
+| Method | Endpoint | Description | Response |
+|--------|----------|-------------|----------|
+| GET | `/` | Landing page (HTML) or JSON discovery | HTML or `{ message, docs, health }` |
+| GET | `/health` | Health check (legacy) | `{ status: string, message: string, timestamp: string }` |
+| GET | `/health/live` | Liveness probe | `{ status: string }` |
+| GET | `/health/ready` | Readiness probe (503 until server binds) | `{ status: string }` |
+| GET | `/api/hello` | Sample hello endpoint | `{ message: string }` |
+| POST | `/api/items` | Create an item (30 req/min) | `{ status: "created", item: { name, price, description? } }` |
+| GET | `/api/items/:id` | Get item by ID | `{ itemId: number, name: string, price: number }` |
+| GET | `/v1/status` | API v1 status | `{ version: string, status: string, timestamp: string }` |
+| GET | `/v1/items` | List items (cursor-based pagination) | paginated envelope — see [Pagination](#pagination) |
+| POST | `/v1/items` | Create a v1 item (30 req/min) | `{ status: "created", item: { name, price } }` |
+| GET | `/docs` | Swagger UI (non-production only) | HTML |
 
 ## Pagination
 
 `GET /v1/items` uses cursor-based pagination. All paginated endpoints share the same query parameters, response envelope, and error behavior.
+
+> **Note for template users**: `/v1/items` currently serves 50 hardcoded stub items for demonstration purposes. Replace the `allItems` array in `src/routes/v1/index.ts` with a real database query when implementing production data.
 
 ### Query Parameters
 
