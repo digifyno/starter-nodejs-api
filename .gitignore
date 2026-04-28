@@ -9,9 +9,9 @@ lerna-debug.log*
 
 node_modules
 dist-build
-dist/*.js
-dist/*.d.ts
-dist/*.map
+dist/**/*.js
+dist/**/*.d.ts
+dist/**/*.map
 *.local
 
 # Coverage reports
