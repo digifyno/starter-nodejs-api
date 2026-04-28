@@ -62,7 +62,14 @@ export async function buildApp(options?: BuildOptions): Promise<FastifyInstance>
   const indexHtml = existsSync(htmlPath) ? readFileSync(htmlPath, 'utf-8') : null
 
   const fastify = Fastify({
-    logger: true,
+    logger: {
+      level: 'info',
+      redact: [
+        'req.headers.authorization',
+        'req.headers.cookie',
+        'req.headers["x-api-key"]'
+      ]
+    },
     genReqId: (req) => {
       const id = req.headers['x-request-id']
       if (typeof id === 'string' && UUID_REGEX.test(id)) return id
