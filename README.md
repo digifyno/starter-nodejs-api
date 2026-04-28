@@ -5,13 +5,13 @@ A production-ready Fastify backend starter template with TypeScript, pre-configu
 ## Features
 
 - **Fastify 5** — Fast and low overhead web framework
-- **TypeScript 5.7+** — Strict mode, NodeNext ESM
+- **TypeScript 6.x** — Strict mode, NodeNext ESM
 - **tsx** — Fast TypeScript execution with watch mode for development
 - **`@fastify/helmet`** — HTTP security headers (enabled by default)
 - **`@fastify/rate-limit`** — 100 req/min global, 30 req/min on write routes (enabled by default)
-- **`@fastify/swagger` + `@fastify/swagger-ui`** — OpenAPI 3.0 docs at `/docs` (dev/staging only)
+- **`@fastify/swagger` + `@fastify/swagger-ui`** — OpenAPI 3.0 docs at `/docs` (non-production only)
 - **`@fastify/compress`** — gzip/brotli response compression (enabled by default)
-- **`@fastify/cors`** — CORS disabled in production, open in dev/staging (enabled by default)
+- **`@fastify/cors`** — CORS disabled in production, open in non-production (enabled by default)
 - **Zod** — Environment variable validation with fail-fast on startup
 
 ## Quick Start
@@ -70,7 +70,7 @@ vitest.config.ts          # Test runner config
 | GET | `/v1/status` | API v1 status |
 | GET | `/v1/items` | List items (cursor-based pagination) |
 | POST | `/v1/items` | Create a v1 item (30 req/min) |
-| GET | `/docs` | Swagger UI (dev/staging only) |
+| GET | `/docs` | Swagger UI (non-production only) |
 
 ## Pagination
 
@@ -260,9 +260,9 @@ fastify.get('/api/users', async () => {
 
 ## CORS
 
-CORS is pre-configured — no install needed. In **production** (`NODE_ENV=production`), CORS is disabled (`origin: false`). In **development/staging**, all origins are permitted (`origin: true`).
+CORS is pre-configured — no install needed. In **production** (`NODE_ENV=production`), CORS is disabled (`origin: false`). In **non-production** environments (`NODE_ENV=development` or `NODE_ENV=test`), all origins are permitted (`origin: true`).
 
-To restrict to specific origins, override the registration in `buildApp()` in `src/app.ts` (line 49):
+To restrict to specific origins, override the `cors` registration in `buildApp()` in `src/app.ts`:
 
 ```typescript
 await fastify.register(cors, {
